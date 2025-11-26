@@ -1,5 +1,6 @@
 package com.lapcevichme.winterhackathon.data.repository.mock
 
+import com.lapcevichme.winterhackathon.core.config.CasinoConfig
 import com.lapcevichme.winterhackathon.domain.model.Prize
 import com.lapcevichme.winterhackathon.domain.model.PrizeType
 import com.lapcevichme.winterhackathon.domain.model.SpinResponse
@@ -19,10 +20,39 @@ class MockCasinoRepositoryImpl : CasinoRepository {
 
         val random = (0..100).random()
         val winner = when {
-            random < 2 -> Prize("1", "Dragon Lore", PrizeType.ITEM, 0, "🐉", 0xFFFFD700)
-            random < 10 -> Prize("2", "Варежки", PrizeType.ITEM, 0, "🧤", 0xFFE91E63)
-            random < 40 -> Prize("3", "Кэшбек 5", PrizeType.MONEY, 5, "💰", 0xFF2196F3)
-            else -> Prize("4", "Стикер", PrizeType.TRASH, 0, "💩", 0xFF9E9E9E)
+            random < CasinoConfig.CHANCE_LEGENDARY -> Prize(
+                "1",
+                "Dragon Lore",
+                PrizeType.ITEM,
+                0,
+                "🐉",
+                CasinoConfig.Colors.LEGENDARY
+            )
+
+            random < CasinoConfig.CHANCE_EPIC -> Prize(
+                "2",
+                "Варежки",
+                PrizeType.ITEM,
+                0,
+                "🧤",
+                CasinoConfig.Colors.EPIC
+            )
+
+            random < CasinoConfig.CHANCE_RARE -> Prize(
+                "3",
+                "Кэшбек 5",
+                PrizeType.MONEY,
+                5,
+                "💰",
+                CasinoConfig.Colors.RARE
+            )
+
+            else -> Prize("4",
+                "Стикер",
+                PrizeType.TRASH,
+                0,
+                "💩",
+                CasinoConfig.Colors.COMMON)
         }
 
         if (winner.type == PrizeType.MONEY) {
