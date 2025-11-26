@@ -2,10 +2,10 @@ package com.lapcevichme.winterhackathon.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val CyberDark = Color(0xFF1E1E2E)
+val CyberBlack = Color(0xFF0F0F16) // Градиент
+val DeepNav = Color(0xFF151520)
+val SurfaceDark = Color(0xFF2E2E3E)
+val SurfaceLighter = Color(0xFF3E3E4E)
+val AccentYellow = Color.Yellow
+val ActionRed = Color(0xFFF44336)
