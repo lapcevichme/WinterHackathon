@@ -12,9 +12,13 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = Color.White,
     surface = SurfaceDark,
     onSurface = Color.White,
+    surfaceVariant = ItemCardBg,
+    onSurfaceVariant = Color.White,
     error = ActionRed,
+    onError = Color.White,
     secondaryContainer = DeepNav,
-    onSecondaryContainer = Color.White
+    onSecondaryContainer = Color.White,
+    tertiaryContainer = CyberBlack
 )
 
 @Composable

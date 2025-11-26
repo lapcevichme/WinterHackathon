@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.lapcevichme.winterhackathon.presentation.casino.CasinoScreenRoot
 
 @Composable
 fun AppNavGraph(
@@ -19,7 +20,7 @@ fun AppNavGraph(
     ) {
         composable(Screen.Home.route) { MainScreen() }
         composable(Screen.Leaderboard.route) { LeaderboardScreen() }
-        composable(Screen.Casino.route) { CasinoScreen() }
+        composable(Screen.Casino.route) { CasinoScreenRoot() }
         composable(Screen.Profile.route) { ProfileScreen() }
     }
 }
@@ -32,11 +33,6 @@ fun MainScreen() {
 @Composable
 fun LeaderboardScreen() {
     Text("Leaderboard Screen")
-}
-
-@Composable
-fun CasinoScreen() {
-    Text("Casino Screen")
 }
 
 @Composable

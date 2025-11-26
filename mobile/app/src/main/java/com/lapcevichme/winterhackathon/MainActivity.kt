@@ -9,7 +9,9 @@ import androidx.compose.ui.graphics.toArgb
 import com.lapcevichme.winterhackathon.ui.navigation.WinterHackathonApp
 import com.lapcevichme.winterhackathon.ui.theme.CyberDark
 import com.lapcevichme.winterhackathon.ui.theme.DeepNav
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

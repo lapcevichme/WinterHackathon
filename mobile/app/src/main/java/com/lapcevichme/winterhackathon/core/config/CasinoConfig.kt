@@ -13,9 +13,9 @@ object CasinoConfig {
 
     // Цвета редкости
     object Colors {
-        const val LEGENDARY = 0xFFFFD700
-        const val EPIC = 0xFFE91E63
-        const val RARE = 0xFF2196F3
-        const val COMMON = 0xFF9E9E9E
+        const val LEGENDARY = "#FFFFD700"
+        const val EPIC = "#FFE91E63"
+        const val RARE = "#FF2196F3"
+        const val COMMON = "#FF9E9E9E"
     }
 }

@@ -8,7 +8,15 @@ data class Prize(
     val type: PrizeType,
     val amount: Int = 0,
     val emoji: String,
-    val colorHex: Long
+    val colorHex: String
 ) {
-    val color: Color get() = Color(colorHex)
+    val color: Color
+        get() {
+            return try {
+                val androidColor = android.graphics.Color.parseColor(colorHex)
+                Color(androidColor)
+            } catch (e: Exception) {
+                Color(0xFF9E9E9E)
+            }
+        }
 }
