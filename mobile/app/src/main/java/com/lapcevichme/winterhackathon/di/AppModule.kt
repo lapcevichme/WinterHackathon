@@ -1,4 +1,4 @@
-package com.lapcevichme.winterhackathon
+package com.lapcevichme.winterhackathon.di
 
 import com.lapcevichme.winterhackathon.data.repository.mock.MockCasinoRepositoryImpl
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
