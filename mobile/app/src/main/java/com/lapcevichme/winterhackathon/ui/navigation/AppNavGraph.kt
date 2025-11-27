@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.lapcevichme.winterhackathon.presentation.auth.LoginScreen
 import com.lapcevichme.winterhackathon.presentation.casino.CasinoScreenRoot
 import com.lapcevichme.winterhackathon.presentation.onboarding.OnboardingScreen
@@ -23,7 +24,23 @@ fun AppNavGraph(
         modifier = modifier
     ) {
         composable(Screen.Onboarding.route) { OnboardingScreen(navController) }
-        composable(Screen.Login.route) { LoginScreen(navController) }
+
+        composable(
+            route = Screen.Login.route,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "winterhack://join?team={teamId}"
+                },
+                navDeepLink {
+                    // TODO: норм паттерн
+                    uriPattern = "https://winterhack.com/join?team={teamId}"
+                }
+            )
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getString("teamId")
+
+            LoginScreen(navController, preselectedTeamId = teamId)
+        }
 
         composable(Screen.Home.route) { MainScreen(navController) }
         composable(Screen.Leaderboard.route) { LeaderboardScreen() }

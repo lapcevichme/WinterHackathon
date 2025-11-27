@@ -34,7 +34,13 @@ fun LoginScreen(
     preselectedTeamId: String? = null
 ) {
     var nickname by remember { mutableStateOf("") }
-    var selectedTeamId by remember { mutableStateOf(preselectedTeamId) }
+    var selectedTeamId by remember(preselectedTeamId) { mutableStateOf(preselectedTeamId) }
+
+    LaunchedEffect(preselectedTeamId) {
+        if (preselectedTeamId != null) {
+            selectedTeamId = preselectedTeamId
+        }
+    }
 
     Column(
         modifier = Modifier
