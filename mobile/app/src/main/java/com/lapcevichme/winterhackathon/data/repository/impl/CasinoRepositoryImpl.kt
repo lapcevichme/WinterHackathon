@@ -1,16 +1,23 @@
 package com.lapcevichme.winterhackathon.data.repository.impl
 
+import com.lapcevichme.winterhackathon.data.mapper.toDomain
+import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
+import com.lapcevichme.winterhackathon.data.remote.SpinRequest
 import com.lapcevichme.winterhackathon.domain.model.SpinResponse
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
+import javax.inject.Inject
 
-class NetworkCasinoRepository(/* private val api: ApiService */) : CasinoRepository {
+class CasinoRepositoryImpl @Inject constructor(
+    private val api: CasinoApiService
+) : CasinoRepository {
+
     override suspend fun getUserBalance(): Int {
-        // return api.getBalance().amount
-        return 0
+        return api.getUserBalance().balance
     }
 
     override suspend fun spin(bet: Int): SpinResponse {
-        // val response = api.spin(SpinRequest(bet))
-        TODO("Когда Бэк сделают бахнуть retrofit")
+        val request = SpinRequest(bet = bet)
+        val responseDto = api.spin(request)
+        return responseDto.toDomain()
     }
 }
