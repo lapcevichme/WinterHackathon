@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 
-from session import async_session_maker
+from database import async_session_maker
 
 ModelType = TypeVar("ModelType")
 
@@ -23,4 +23,9 @@ class BaseDao(Generic[ModelType]):
     async def get_entity_by_id(self, id: int):
         async with async_session_maker() as session:
             obj = await session.execute(select(self.model).where(getattr(self.model_db, self._id_name) == id))
+            return obj.scalars().first()
+        
+    async def get_by_username(self, username: str):
+        async with async_session_maker() as session:
+            obj = await session.execute(select(self.model).where(self.model.username == username))
             return obj.scalars().first()

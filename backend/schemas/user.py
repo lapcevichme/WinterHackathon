@@ -6,7 +6,7 @@ class User(BaseModel):
     password: str
     email: EmailStr
     max_score: int = 0
-    ord_id: Optional[int] = None
+    team_id: Optional[int] = None
     
     @field_validator('password')
     @classmethod
@@ -14,3 +14,8 @@ class User(BaseModel):
         if len(v) < 8:
             raise ValueError("The password length is too small")
         return v
+    
+class User_Login(BaseModel):
+    username: str
+    password: str
+    
