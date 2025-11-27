@@ -12,20 +12,50 @@ class BaseDao(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
         self._id_name = list(model.__table__.primary_key.columns.keys())[0]
+        self.async_session_maker = async_session_maker
         
     async def create_entity(self, data: Dict[str, Any]):
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             obj = self.model(**data)
             session.add(obj)
             await session.commit()
             await session.refresh(obj)
+            return obj
     
     async def get_entity_by_id(self, id: int):
-        async with async_session_maker() as session:
-            obj = await session.execute(select(self.model).where(getattr(self.model_db, self._id_name) == id))
-            return obj.scalars().first()
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(getattr(self.model, self._id_name) == id)
+            )
+            return result.scalars().first()
         
     async def get_by_username(self, username: str):
-        async with async_session_maker() as session:
-            obj = await session.execute(select(self.model).where(self.model.username == username))
-            return obj.scalars().first()
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(self.model.username == username)
+            )
+            return result.scalars().first()
+    
+    async def update_entity(self, id: int, data: Dict[str, Any]):
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(getattr(self.model, self._id_name) == id)
+            )
+            obj = result.scalars().first()
+            if obj:
+                for key, value in data.items():
+                    setattr(obj, key, value)
+                await session.commit()
+                await session.refresh(obj)
+            return obj
+    
+    async def delete_entity(self, id: int):
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(getattr(self.model, self._id_name) == id)
+            )
+            obj = result.scalars().first()
+            if obj:
+                await session.delete(obj)
+                await session.commit()
+            return obj

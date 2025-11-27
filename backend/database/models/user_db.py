@@ -6,6 +6,7 @@ from database import Base
 if TYPE_CHECKING:
     from .team_db import Team_DB
     from .items_db import Items_DB
+    from .refresh_token_db import RefreshToken_DB
     
 class User_DB(Base):
     __tablename__ = "users"
@@ -19,6 +20,10 @@ class User_DB(Base):
     team_id: Mapped[Optional[int]] = mapped_column(ForeignKey('teams.team_id'), nullable=True)
     url: Mapped[str] = mapped_column(String(100), nullable=True)
     
-    # ✅ Правильно: back_populates='users' (ссылается на Team_DB.users)
     team: Mapped[Optional['Team_DB']] = relationship('Team_DB', back_populates='users')
-    items: Mapped[List['Items_DB']] = relationship('Items_DB', back_populates='user')  # ✅ Исправлено на 'user'
+    items: Mapped[List['Items_DB']] = relationship('Items_DB', back_populates='user')
+    refresh_tokens: Mapped[List['RefreshToken_DB']] = relationship(
+        'RefreshToken_DB', 
+        back_populates='user',
+        cascade="all, delete-orphan"
+    )
