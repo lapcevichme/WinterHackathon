@@ -1,0 +1,149 @@
+package com.lapcevichme.winterhackathon.presentation.auth
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.lapcevichme.winterhackathon.ui.navigation.Screen
+
+// TODO команды/отделы с бэка получать
+data class Department(val id: String, val name: String, val emoji: String)
+
+val departments = listOf(
+    Department("it", "IT Отдел", "💻"),
+    Department("hr", "HR & People", "🤝"),
+    Department("sales", "Продажи", "💰"),
+    Department("accounting", "Бухгалтерия", "📊"),
+    Department("marketing", "Маркетинг", "📢")
+)
+
+@Composable
+fun LoginScreen(
+    navController: NavController,
+    preselectedTeamId: String? = null
+) {
+    var nickname by remember { mutableStateOf("") }
+    var selectedTeamId by remember { mutableStateOf(preselectedTeamId) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
+    ) {
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            "Создание Профиля",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = nickname,
+            onValueChange = { nickname = it },
+            label = { Text("Твой Позывной (Никнейм)") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+            )
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            "Выбери свой клан:",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(departments) { dept ->
+                DepartmentItem(
+                    department = dept,
+                    isSelected = selectedTeamId == dept.id,
+                    onClick = { selectedTeamId = dept.id }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                // TODO: Сохранить данные на сервер/локально
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+            },
+            enabled = nickname.isNotBlank() && selectedTeamId != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Text("ВСТУПИТЬ В БОЙ", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+fun DepartmentItem(
+    department: Department,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val bgColor =
+        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(department.emoji, style = MaterialTheme.typography.headlineSmall)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            department.name,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
