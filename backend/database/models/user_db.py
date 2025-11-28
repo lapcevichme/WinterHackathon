@@ -19,6 +19,7 @@ class User_DB(Base):
     money: Mapped[int] = mapped_column(Integer, default=0)
     team_id: Mapped[Optional[int]] = mapped_column(ForeignKey('teams.team_id'), nullable=True)
     url: Mapped[str] = mapped_column(String(100), nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="player")  # Добавляем поле роли
     
     team: Mapped[Optional['Team_DB']] = relationship('Team_DB', back_populates='users')
     items: Mapped[List['Items_DB']] = relationship('Items_DB', back_populates='user')
