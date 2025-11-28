@@ -1,10 +1,14 @@
 package com.lapcevichme.winterhackathon.di
 
 import com.lapcevichme.winterhackathon.data.repository.mock.MockCasinoRepositoryImpl
+import com.lapcevichme.winterhackathon.data.repository.mock.MockGameRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.mock.MockLeaderboardRepositoryImpl
+import com.lapcevichme.winterhackathon.data.repository.mock.MockMainRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.mock.MockProfileRepositoryImpl
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
+import com.lapcevichme.winterhackathon.domain.repository.GameRepository
 import com.lapcevichme.winterhackathon.domain.repository.LeaderboardRepository
+import com.lapcevichme.winterhackathon.domain.repository.MainRepository
 import com.lapcevichme.winterhackathon.domain.repository.ProfileRepository
 import dagger.Module
 import dagger.Provides
@@ -31,5 +35,17 @@ object AppModule {
     @Singleton
     fun provideProfileRepository(): ProfileRepository {
         return MockProfileRepositoryImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMainRepository(): MainRepository {
+        return MockMainRepositoryImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGameRepository(): GameRepository {
+        return MockGameRepositoryImpl()
     }
 }
