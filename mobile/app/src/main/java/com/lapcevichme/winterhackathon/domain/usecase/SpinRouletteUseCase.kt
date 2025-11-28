@@ -1,9 +1,9 @@
 package com.lapcevichme.winterhackathon.domain.usecase
 
 import com.lapcevichme.winterhackathon.core.config.CasinoConfig
-import com.lapcevichme.winterhackathon.domain.model.Prize
-import com.lapcevichme.winterhackathon.domain.model.PrizeType
-import com.lapcevichme.winterhackathon.domain.model.SpinResult
+import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
+import com.lapcevichme.winterhackathon.domain.model.casino.SpinResult
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
 import javax.inject.Inject
 

@@ -1,6 +1,6 @@
 package com.lapcevichme.winterhackathon.domain.repository
 
-import com.lapcevichme.winterhackathon.domain.model.SpinResponse
+import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
 
 
 interface CasinoRepository {

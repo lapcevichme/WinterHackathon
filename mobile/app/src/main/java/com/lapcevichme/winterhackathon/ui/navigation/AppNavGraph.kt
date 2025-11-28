@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.lapcevichme.winterhackathon.GameScreen
+import com.lapcevichme.winterhackathon.presentation.game.GameScreen
 import com.lapcevichme.winterhackathon.presentation.auth.LoginScreen
 import com.lapcevichme.winterhackathon.presentation.casino.CasinoScreenRoot
 import com.lapcevichme.winterhackathon.presentation.leaderboard.LeaderboardScreen

@@ -1,9 +1,9 @@
 package com.lapcevichme.winterhackathon.data.repository.mock
 
 import com.lapcevichme.winterhackathon.core.config.CasinoConfig
-import com.lapcevichme.winterhackathon.domain.model.Prize
-import com.lapcevichme.winterhackathon.domain.model.PrizeType
-import com.lapcevichme.winterhackathon.domain.model.SpinResponse
+import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
+import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
 import kotlinx.coroutines.delay
 

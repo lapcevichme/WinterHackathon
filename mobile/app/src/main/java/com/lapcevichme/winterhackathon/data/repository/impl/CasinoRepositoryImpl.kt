@@ -3,7 +3,7 @@ package com.lapcevichme.winterhackathon.data.repository.impl
 import com.lapcevichme.winterhackathon.data.mapper.toDomain
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
 import com.lapcevichme.winterhackathon.data.remote.SpinRequest
-import com.lapcevichme.winterhackathon.domain.model.SpinResponse
+import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
 import javax.inject.Inject
 
