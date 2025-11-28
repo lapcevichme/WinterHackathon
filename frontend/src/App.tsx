@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
@@ -11,7 +12,7 @@ declare global {
 }
 
 type GameState = 'ready' | 'playing' | 'over'
-type GameTab = 'flappy' | 'osu'
+type GameTab = 'flappy' | 'osu' | 'ski'
 
 type Pipe = {
   x: number
@@ -28,6 +29,11 @@ type OsuTarget = {
   lifespan: number
 }
 
+type SkiSegment = {
+  y: number
+  center: number
+}
+
 // Flappy Bird tuning
 const GRAVITY = 0.45
 const FLAP_STRENGTH = -7.5
@@ -36,6 +42,16 @@ const BASE_SPEED = 2.8
 // osu!-lite tuning
 const OSU_LIFESPAN = 1600
 const OSU_SPAWN_INTERVAL = 900
+
+// Ski tuning
+const SKI_VERTICAL_SPEED = 4.4
+const SKI_HORIZONTAL_SPEED = 4.2
+const SKI_SEGMENT_LENGTH = 140
+const SKI_SEGMENT_BUFFER = 220
+const SKI_DIRECTION = {
+  LEFT: -1,
+  RIGHT: 1,
+} as const
 
 function App() {
   const [activeGame, setActiveGame] = useState<GameTab>('flappy')
@@ -63,6 +79,21 @@ function App() {
   const osuTargetsRef = useRef<OsuTarget[]>([])
   const osuNextIdRef = useRef(1)
 
+  // Ski state
+  const skiCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [skiState, setSkiState] = useState<GameState>('ready')
+  const [skiScore, setSkiScore] = useState(0)
+  const skiStateRef = useRef<GameState>('ready')
+  const skiScoreRef = useRef(0)
+  const skiRequestRef = useRef<number | null>(null)
+  const skiLastTimeRef = useRef(0)
+  const skiSegmentsRef = useRef<SkiSegment[]>([])
+  const skierRef = useRef<{ x: number; direction: -1 | 1 }>({
+    x: 0,
+    direction: SKI_DIRECTION.RIGHT,
+  })
+  const skiDistanceRef = useRef(0)
+
   useEffect(() => {
     flappyStateRef.current = flappyState
   }, [flappyState])
@@ -75,11 +106,18 @@ function App() {
   useEffect(() => {
     osuScoreRef.current = osuScore
   }, [osuScore])
+  useEffect(() => {
+    skiStateRef.current = skiState
+  }, [skiState])
+  useEffect(() => {
+    skiScoreRef.current = skiScore
+  }, [skiScore])
 
   useEffect(() => {
     const resize = () => {
       const width = window.innerWidth
       const height = window.innerHeight
+
       const flappyCanvas = flappyCanvasRef.current
       if (flappyCanvas) {
         flappyCanvas.width = width
@@ -90,6 +128,7 @@ function App() {
         }
         drawFlappyScene()
       }
+
       const osuCanvas = osuCanvasRef.current
       if (osuCanvas) {
         osuCanvas.width = width
@@ -99,15 +138,58 @@ function App() {
         }
         drawOsuScene()
       }
+
+      const skiCanvas = skiCanvasRef.current
+      if (skiCanvas) {
+        skiCanvas.width = width
+        skiCanvas.height = height
+        if (skiStateRef.current === 'ready') {
+          initSkiSegments(width, height)
+          skierRef.current = { x: width * 0.5, direction: SKI_DIRECTION.RIGHT }
+          skiDistanceRef.current = 0
+        }
+        drawSkiScene()
+      }
     }
 
     resize()
     window.addEventListener('resize', resize)
 
+    const onKeyDown = (event: KeyboardEvent) => {
+      const currentActive = activeGame
+      const currentFlappyState = flappyStateRef.current
+
+      if (currentActive === 'flappy') {
+        if (event.code === 'Space' || event.code === 'ArrowUp') {
+          event.preventDefault()
+          handleFlappyInput()
+        }
+        if (event.code === 'KeyR' && currentFlappyState === 'over') {
+          event.preventDefault()
+          startFlappy()
+        }
+      }
+
+      if (currentActive === 'ski') {
+        if (event.code === 'ArrowLeft') {
+          event.preventDefault()
+          handleSkiInput('left')
+        }
+        if (event.code === 'ArrowRight') {
+          event.preventDefault()
+          handleSkiInput('right')
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+
     return () => {
       window.removeEventListener('resize', resize)
+      window.removeEventListener('keydown', onKeyDown)
       stopFlappyLoop()
       stopOsuLoop()
+      stopSkiLoop()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -116,6 +198,8 @@ function App() {
     // When switching games, pause both loops and reset the selected one to ready.
     stopFlappyLoop()
     stopOsuLoop()
+    stopSkiLoop()
+
     if (activeGame === 'flappy') {
       setFlappyState('ready')
       flappyStateRef.current = 'ready'
@@ -125,13 +209,25 @@ function App() {
       const canvas = flappyCanvasRef.current
       if (canvas) birdRef.current = { y: canvas.height * 0.5, vy: 0 }
       drawFlappyScene()
-    } else {
+    } else if (activeGame === 'osu') {
       setOsuState('ready')
       osuStateRef.current = 'ready'
       setOsuScore(0)
       osuScoreRef.current = 0
       osuTargetsRef.current = []
       drawOsuScene()
+    } else {
+      setSkiState('ready')
+      skiStateRef.current = 'ready'
+      setSkiScore(0)
+      skiScoreRef.current = 0
+      const canvas = skiCanvasRef.current
+      if (canvas) {
+        initSkiSegments(canvas.width, canvas.height)
+        skierRef.current = { x: canvas.width * 0.5, direction: SKI_DIRECTION.RIGHT }
+        skiDistanceRef.current = 0
+      }
+      drawSkiScene()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeGame])
@@ -147,6 +243,13 @@ function App() {
     if (osuRequestRef.current) {
       cancelAnimationFrame(osuRequestRef.current)
       osuRequestRef.current = null
+    }
+  }
+
+  const stopSkiLoop = () => {
+    if (skiRequestRef.current) {
+      cancelAnimationFrame(skiRequestRef.current)
+      skiRequestRef.current = null
     }
   }
 
@@ -394,7 +497,7 @@ function App() {
   }
 
   // --- osu!-lite ---
-  const handleOsuTap = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const handleOsuTap = (event: PointerEvent<HTMLCanvasElement>) => {
     const canvas = osuCanvasRef.current
     if (!canvas) return
 
@@ -557,11 +660,208 @@ function App() {
       ctx.strokeStyle = '#facc15'
       ctx.lineWidth = 5
       ctx.beginPath()
-      ctx.arc(0, 0, radius * 0.8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * lifeRatio)
+      ctx.arc(
+        0,
+        0,
+        radius * 0.8,
+        -Math.PI / 2,
+        -Math.PI / 2 + Math.PI * 2 * lifeRatio,
+      )
       ctx.stroke()
 
       ctx.restore()
     })
+  }
+
+  // --- Ski ---
+  const handleSkiInput = (side: 'left' | 'right') => {
+    const state = skiStateRef.current
+    if (state === 'ready' || state === 'over') {
+      startSki(side)
+      return
+    }
+    if (state !== 'playing') return
+    skierRef.current.direction = side === 'left' ? SKI_DIRECTION.LEFT : SKI_DIRECTION.RIGHT
+  }
+
+  const startSki = (firstSide: 'left' | 'right') => {
+    const canvas = skiCanvasRef.current
+    if (!canvas) return
+
+    initSkiSegments(canvas.width, canvas.height)
+    skierRef.current = {
+      x: canvas.width * 0.5,
+      direction: firstSide === 'left' ? SKI_DIRECTION.LEFT : SKI_DIRECTION.RIGHT,
+    }
+    skiDistanceRef.current = 0
+    setSkiScore(0)
+    skiScoreRef.current = 0
+    setSkiState('playing')
+    skiStateRef.current = 'playing'
+    skiLastTimeRef.current = performance.now()
+
+    stopSkiLoop()
+    skiRequestRef.current = requestAnimationFrame(skiTick)
+  }
+
+  const skiTick = (timestamp: number) => {
+    const delta = Math.min(timestamp - skiLastTimeRef.current, 32)
+    skiLastTimeRef.current = timestamp
+
+    updateSki(delta)
+    drawSkiScene()
+
+    if (skiStateRef.current === 'playing') {
+      skiRequestRef.current = requestAnimationFrame(skiTick)
+    }
+  }
+
+  const updateSki = (delta: number) => {
+    const canvas = skiCanvasRef.current
+    if (!canvas) return
+
+    const width = canvas.width
+    const height = canvas.height
+    const dt = delta / (1000 / 60)
+    const trackHalfWidth = Math.max(70, width * 0.18)
+    const margin = Math.max(48, width * 0.1)
+    const skierY = height * 0.35
+
+    // Move track up (skier goes down)
+    const speed = SKI_VERTICAL_SPEED * dt
+    skiSegmentsRef.current.forEach((seg) => {
+      seg.y -= speed
+    })
+
+    // Remove segments above view
+    while (
+      skiSegmentsRef.current.length > 2 &&
+      skiSegmentsRef.current[1].y < -SKI_SEGMENT_BUFFER
+    ) {
+      skiSegmentsRef.current.shift()
+    }
+
+    // Add new segments at bottom
+    ensureSkiSegments(width, height)
+
+    // Move skier horizontally
+    const skier = skierRef.current
+    skier.x += SKI_HORIZONTAL_SPEED * dt * skier.direction
+    skier.x = Math.max(20, Math.min(width - 20, skier.x))
+
+    skiDistanceRef.current += speed
+    const nextScore = Math.floor(skiDistanceRef.current / 6)
+    if (nextScore !== skiScoreRef.current) {
+      skiScoreRef.current = nextScore
+      setSkiScore(nextScore)
+    }
+
+    // Collision check
+    const center = getSkiCenterAt(skierY)
+    const leftEdge = center - trackHalfWidth
+    const rightEdge = center + trackHalfWidth
+    if (skier.x < leftEdge + margin * 0.25 || skier.x > rightEdge - margin * 0.25) {
+      endSki(skiScoreRef.current)
+    }
+  }
+
+  const endSki = (finalScore: number) => {
+    if (skiStateRef.current === 'over') return
+    setSkiState('over')
+    skiStateRef.current = 'over'
+    stopSkiLoop()
+    sendScore(finalScore)
+  }
+
+  const initSkiSegments = (width: number, height: number) => {
+    const segments: SkiSegment[] = []
+    const startCenter = width * 0.5
+    for (let y = 0; y <= height + SKI_SEGMENT_BUFFER; y += SKI_SEGMENT_LENGTH) {
+      segments.push({ y, center: startCenter })
+    }
+    skiSegmentsRef.current = segments
+  }
+
+  const ensureSkiSegments = (width: number, height: number) => {
+    const segments = skiSegmentsRef.current
+    if (!segments.length) {
+      initSkiSegments(width, height)
+      return
+    }
+    const margin = Math.max(60, width * 0.18)
+
+    while (segments[segments.length - 1].y < height + SKI_SEGMENT_BUFFER) {
+      const last = segments[segments.length - 1]
+      const deltaX = (Math.random() * 2 - 1) * Math.max(40, width * 0.12)
+      const nextCenter = clamp(last.center + deltaX, margin, width - margin)
+      segments.push({
+        y: last.y + SKI_SEGMENT_LENGTH,
+        center: nextCenter,
+      })
+    }
+  }
+
+  const getSkiCenterAt = (targetY: number) => {
+    const segments = skiSegmentsRef.current
+    if (!segments.length) return 0
+    for (let i = 0; i < segments.length - 1; i++) {
+      const a = segments[i]
+      const b = segments[i + 1]
+      if (targetY >= a.y && targetY <= b.y) {
+        const t = (targetY - a.y) / (b.y - a.y || 1)
+        return a.center + (b.center - a.center) * t
+      }
+    }
+    return segments[segments.length - 1].center
+  }
+
+  const drawSkiScene = () => {
+    const canvas = skiCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const { width, height } = canvas
+    const trackHalfWidth = Math.max(70, width * 0.18)
+    const skierY = height * 0.35
+
+    ctx.fillStyle = '#0b1f36'
+    ctx.fillRect(0, 0, width, height)
+
+    // Draw track
+    const segments = skiSegmentsRef.current
+    for (let i = 0; i < segments.length - 1; i++) {
+      const a = segments[i]
+      const b = segments[i + 1]
+      ctx.beginPath()
+      ctx.moveTo(a.center - trackHalfWidth, a.y)
+      ctx.lineTo(a.center + trackHalfWidth, a.y)
+      ctx.lineTo(b.center + trackHalfWidth, b.y)
+      ctx.lineTo(b.center - trackHalfWidth, b.y)
+      ctx.closePath()
+      ctx.fillStyle = '#1e293b'
+      ctx.fill()
+      ctx.strokeStyle = '#94a3b8'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+
+    // Draw skier
+    const skier = skierRef.current
+    ctx.save()
+    ctx.translate(skier.x, skierY)
+    ctx.fillStyle = '#e11d48'
+    ctx.beginPath()
+    ctx.moveTo(0, -18)
+    ctx.lineTo(14, 16)
+    ctx.lineTo(-14, 16)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#f8fafc'
+    ctx.fillRect(-3, -10, 6, 10)
+    ctx.fillStyle = '#0ea5e9'
+    ctx.fillRect(-6, 4, 12, 4)
+    ctx.restore()
   }
 
   return (
@@ -579,6 +879,12 @@ function App() {
         >
           osu! lite
         </button>
+        <button
+          className={`tab ${activeGame === 'ski' ? 'active' : ''}`}
+          onClick={() => setActiveGame('ski')}
+        >
+          Ski run
+        </button>
       </div>
 
       <div className="canvas-wrapper">
@@ -594,10 +900,21 @@ function App() {
           style={{ display: activeGame === 'osu' ? 'block' : 'none' }}
           onPointerDown={handleOsuTap}
         />
+        <canvas
+          ref={skiCanvasRef}
+          className="game-canvas"
+          style={{ display: activeGame === 'ski' ? 'block' : 'none' }}
+          onPointerDown={(event) => {
+            const canvas = skiCanvasRef.current
+            if (!canvas) return
+            const side = event.clientX < canvas.getBoundingClientRect().width / 2 ? 'left' : 'right'
+            handleSkiInput(side)
+          }}
+        />
       </div>
 
       <div className="hud">
-        {activeGame === 'flappy' ? (
+        {activeGame === 'flappy' && (
           <>
             <div className="score-badge">Счёт: {flappyScore}</div>
             {flappyState === 'ready' && (
@@ -607,16 +924,30 @@ function App() {
               <div className="message">Игра окончена. Тапни, чтобы начать заново</div>
             )}
           </>
-        ) : (
+        )}
+
+        {activeGame === 'osu' && (
           <>
             <div className="score-badge">Счёт: {osuScore}</div>
             {osuState === 'ready' && (
-              <div className="message">
-                osu! lite — тапай по кругам, пока они не исчезли
-              </div>
+              <div className="message">osu! lite — тапай по кругам, пока они не исчезли</div>
             )}
             {osuState === 'over' && (
               <div className="message">Промах. Тапни, чтобы начать снова</div>
+            )}
+          </>
+        )}
+
+        {activeGame === 'ski' && (
+          <>
+            <div className="score-badge">Счёт: {skiScore}</div>
+            {skiState === 'ready' && (
+              <div className="message">
+                Ski run — тапни левую/правую сторону, чтобы задать направление
+              </div>
+            )}
+            {skiState === 'over' && (
+              <div className="message">Столкновение. Тапни, чтобы начать снова</div>
             )}
           </>
         )}
@@ -624,5 +955,8 @@ function App() {
     </div>
   )
 }
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value))
 
 export default App
