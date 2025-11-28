@@ -6,6 +6,7 @@ import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 import com.lapcevichme.winterhackathon.domain.repository.ProfileRepository
 import kotlinx.coroutines.delay
+import java.util.UUID
 import javax.inject.Inject
 
 class MockProfileRepositoryImpl @Inject constructor() : ProfileRepository {
@@ -58,5 +59,10 @@ class MockProfileRepositoryImpl @Inject constructor() : ProfileRepository {
                 )
             )
         )
+    }
+
+    override suspend fun generateRedeemToken(itemId: String): String {
+        delay(1500)
+        return "GIFT-${itemId}-${UUID.randomUUID().toString().take(8).uppercase()}"
     }
 }

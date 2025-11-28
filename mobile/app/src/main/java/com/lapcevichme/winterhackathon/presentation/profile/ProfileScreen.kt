@@ -1,7 +1,10 @@
 package com.lapcevichme.winterhackathon.presentation.profile
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -33,17 +37,34 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
 import com.lapcevichme.winterhackathon.domain.model.casino.Prize
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ProfileScreen(
@@ -76,11 +97,7 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.End
                 ) {
                     IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = "Обновить",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        Icon(Icons.Filled.Refresh, contentDescription = "Обновить", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -112,7 +129,12 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                InventorySection(profile.inventory)
+                InventorySection(
+                    loot = profile.inventory,
+                    onItemClick = { prize ->
+                        viewModel.onRedeemItemClicked(prize)
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -134,6 +156,173 @@ fun ProfileScreen(
                 modifier = Modifier.align(Alignment.Center)
             )
         }
+
+        if (uiState.selectedPrize != null) {
+            RedeemDialog(
+                prize = uiState.selectedPrize!!,
+                token = uiState.redeemToken,
+                isLoading = uiState.isRedeemLoading,
+                onDismiss = { viewModel.onDismissRedeemDialog() }
+            )
+        }
+    }
+}
+
+@Composable
+fun RedeemDialog(
+    prize: Prize,
+    token: String?,
+    isLoading: Boolean,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "ВЫДАЧА ПРИЗА",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(24.dp)
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = "Закрыть", tint = Color.Gray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(prize.emoji, fontSize = 64.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    prize.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // QR Code
+                Box(
+                    modifier = Modifier
+                        .size(220.dp)
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoading) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = Color.Black)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Генерация кода...", color = Color.Black, fontSize = 12.sp)
+                        }
+                    } else if (token != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            QrCodeView(
+                                content = token,
+                                size = 140.dp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = token,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        Text("Ошибка генерации", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    if (isLoading) "Связываемся с сервером..." else "Покажите этот код организатору",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun QrCodeView(content: String, size: Dp) {
+    val sizePx = with(LocalDensity.current) { size.roundToPx() }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(content) {
+        if (content.isNotEmpty()) {
+            withContext(Dispatchers.IO) {
+                bitmap = generateQrBitmap(content, sizePx)
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!.asImageBitmap(),
+            contentDescription = "QR Code",
+            modifier = Modifier.size(size)
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .background(Color.LightGray)
+        )
+    }
+}
+
+fun generateQrBitmap(content: String, sizePx: Int): Bitmap? {
+    return try {
+        val hints = hashMapOf<EncodeHintType, Any>()
+        hints[EncodeHintType.MARGIN] = 1
+
+        val bitMatrix: BitMatrix = MultiFormatWriter().encode(
+            content,
+            BarcodeFormat.QR_CODE,
+            sizePx,
+            sizePx,
+            hints
+        )
+
+        val w = bitMatrix.width
+        val h = bitMatrix.height
+        val pixels = IntArray(w * h)
+
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                pixels[y * w + x] = if (bitMatrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+            }
+        }
+
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
+        bitmap
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 
@@ -148,7 +337,6 @@ fun ProfileAvatar(profile: UserProfile) {
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        // TODO тут норм загрузка аватара
         Icon(
             Icons.Filled.Person,
             contentDescription = null,
@@ -185,16 +373,8 @@ fun LevelProgress(profile: UserProfile) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    "Уровень ${profile.level}",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "${profile.xp} / ${profile.maxXp} XP",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("Уровень ${profile.level}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("${profile.xp} / ${profile.maxXp} XP", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
@@ -212,7 +392,10 @@ fun LevelProgress(profile: UserProfile) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun InventorySection(loot: List<Prize>) {
+fun InventorySection(
+    loot: List<Prize>,
+    onItemClick: (Prize) -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             "МОЙ ЛУТ (${loot.size})",
@@ -231,7 +414,7 @@ fun InventorySection(loot: List<Prize>) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 loot.forEach { item ->
-                    LootItemView(item)
+                    LootItemView(item, onClick = { onItemClick(item) })
                 }
             }
         }
@@ -239,12 +422,17 @@ fun InventorySection(loot: List<Prize>) {
 }
 
 @Composable
-fun LootItemView(item: Prize) {
+fun LootItemView(
+    item: Prize,
+    onClick: () -> Unit
+) {
     val itemColor = item.color
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(80.dp)
+        modifier = Modifier
+            .width(80.dp)
+            .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
@@ -261,7 +449,8 @@ fun LootItemView(item: Prize) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
-            fontSize = 10.sp
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center
         )
     }
 }

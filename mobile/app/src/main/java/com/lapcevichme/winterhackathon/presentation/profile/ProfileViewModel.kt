@@ -2,6 +2,8 @@ package com.lapcevichme.winterhackathon.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.usecase.GenerateRedeemTokenUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.GetProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +16,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getProfileUseCase: GetProfileUseCase
+    private val getProfileUseCase: GetProfileUseCase,
+    private val generateRedeemTokenUseCase: GenerateRedeemTokenUseCase
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -46,6 +50,46 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun onRedeemItemClicked(prize: Prize) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    selectedPrize = prize,
+                    isRedeemLoading = true,
+                    redeemToken = null
+                )
+            }
+
+            try {
+                val token = generateRedeemTokenUseCase(prize.id)
+                _uiState.update {
+                    it.copy(
+                        isRedeemLoading = false,
+                        redeemToken = token
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isRedeemLoading = false,
+                        selectedPrize = null,
+                        error = "Ошибка генерации QR: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun onDismissRedeemDialog() {
+        _uiState.update {
+            it.copy(
+                selectedPrize = null,
+                redeemToken = null,
+                isRedeemLoading = false
+            )
         }
     }
 }
