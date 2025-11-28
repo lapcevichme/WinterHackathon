@@ -1,4 +1,4 @@
-package com.lapcevichme.winterhackathon.domain.model
+package com.lapcevichme.winterhackathon.domain.model.casino
 
 data class SpinResult(
     val itemsChain: List<Prize>, // Готовая лента из 50 элементов

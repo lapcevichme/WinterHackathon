@@ -1,6 +1,8 @@
-package com.lapcevichme.winterhackathon
+package com.lapcevichme.winterhackathon.presentation.game
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -22,14 +24,14 @@ fun GameScreen(
         object {
             @JavascriptInterface
             fun sendScore(score: Int) {
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                Handler(Looper.getMainLooper()).post {
                     Toast.makeText(context, "Очки получены: $score", Toast.LENGTH_SHORT).show()
                 }
             }
 
             @JavascriptInterface
             fun closeGame() {
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                Handler(Looper.getMainLooper()).post {
                     onCloseGame()
                 }
             }

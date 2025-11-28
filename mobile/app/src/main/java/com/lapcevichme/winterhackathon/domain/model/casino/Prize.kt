@@ -1,6 +1,7 @@
-package com.lapcevichme.winterhackathon.domain.model
+package com.lapcevichme.winterhackathon.domain.model.casino
 
 import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 
 data class Prize(
     val id: String,
@@ -13,7 +14,7 @@ data class Prize(
     val color: Color
         get() {
             return try {
-                val androidColor = android.graphics.Color.parseColor(colorHex)
+                val androidColor = colorHex.toColorInt()
                 Color(androidColor)
             } catch (e: Exception) {
                 Color(0xFF9E9E9E)

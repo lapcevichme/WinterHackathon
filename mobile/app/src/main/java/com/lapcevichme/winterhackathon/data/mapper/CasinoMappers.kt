@@ -2,9 +2,9 @@ package com.lapcevichme.winterhackathon.data.mapper
 
 import com.lapcevichme.winterhackathon.data.remote.PrizeDto
 import com.lapcevichme.winterhackathon.data.remote.SpinResponseDto
-import com.lapcevichme.winterhackathon.domain.model.Prize
-import com.lapcevichme.winterhackathon.domain.model.PrizeType
-import com.lapcevichme.winterhackathon.domain.model.SpinResponse
+import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
+import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
 
 fun PrizeDto.toDomain(): Prize {
     return Prize(
