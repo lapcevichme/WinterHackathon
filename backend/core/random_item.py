@@ -1,8 +1,8 @@
 import random
-from database import basedao
+from database import BaseDao
 from database.models import Casino_DB
 
-item = basedao(Casino_DB)
+item = BaseDao(Casino_DB)
 
 async def get_random_item():
     rare = ["gold", "often", "seldom", "never", "legenda"]
