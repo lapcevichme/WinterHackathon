@@ -6,8 +6,10 @@ class User(BaseModel):
     password: str
     email: EmailStr
     max_score: int = 0
+    money: int = 0  # Добавляем поле денег
     team_id: Optional[int] = None
-    role: str = "player"  # Добавляем роль по умолчанию
+    role: str = "player"
+    url: Optional[str] = None  # Добавляем опциональное поле URL
     
     @field_validator('password')
     @classmethod

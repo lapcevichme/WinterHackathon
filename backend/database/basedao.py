@@ -34,7 +34,7 @@ class BaseDao(Generic[ModelType]):
             result = await session.execute(
                 select(self.model)
             )
-            return result.scalars()
+            return result.scalars().all()
         
 
     async def get_by_username(self, username: str):
@@ -53,7 +53,7 @@ class BaseDao(Generic[ModelType]):
     async def get_all_name_by_rare(self, rare:str):
         async with self.async_session_maker() as session:
             result = await session.execute(select(self.model).where(self.model.rare == rare))
-        return result
+        return result.scalars().all()
     
     async def update_entity(self, id: int, data: Dict[str, Any]):
         async with self.async_session_maker() as session:

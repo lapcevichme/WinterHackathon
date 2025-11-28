@@ -24,6 +24,7 @@ from config import settings
 auth_router = APIRouter()
 user_basedao = BaseDao(User_DB)
 
+
 @auth_router.post("/register", status_code=201)
 async def user_register(
     user: User,
@@ -97,8 +98,6 @@ async def login_for_access_token(
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer",
-        "role": user.role
     }
 
 @auth_router.post("/refresh")
@@ -138,8 +137,6 @@ async def refresh_tokens(
     return {
         "access_token": new_access_token,
         "refresh_token": new_refresh_token,
-        "token_type": "bearer",
-        "role": user.role
     }
 
 @auth_router.post("/logout")
@@ -154,70 +151,70 @@ async def logout(
     
     return {"message": "Successfully logged out"}
 
-@auth_router.get("/verifytoken")
-async def verify_token(current_user: User_DB = Depends(get_current_active_user)):
-    """Проверка валидности токена"""
-    return {
-        "message": "Token is valid",
-        "username": current_user.username,
-        "user_id": current_user.user_id,
-        "role": current_user.role
-    }
+# @auth_router.get("/verifytoken")
+# async def verify_token(current_user: User_DB = Depends(get_current_active_user)):
+#     """Проверка валидности токена"""
+#     return {
+#         "message": "Token is valid",
+#         "username": current_user.username,
+#         "user_id": current_user.user_id,
+#         "role": current_user.role
+#     }
 
-# ДОБАВЛЯЕМ АДМИН ЭНДПОИНТЫ ДЛЯ ТЕСТИРОВАНИЯ РОЛЕЙ
-@auth_router.get("/admin/users")
-async def get_all_users(
-    current_user: User_DB = Depends(require_role("admin"))
-):
-    """Только админы могут получать список всех пользователей"""
-    users = await user_basedao.get_entities()
-    return {
-        "users": [
-            {
-                "user_id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "role": user.role
-            } for user in users
-        ]
-    }
+# # ДОБАВЛЯЕМ АДМИН ЭНДПОИНТЫ ДЛЯ ТЕСТИРОВАНИЯ РОЛЕЙ
+# @auth_router.get("/admin/users")
+# async def get_all_users(
+#     current_user: User_DB = Depends(require_role("admin"))
+# ):
+#     """Только админы могут получать список всех пользователей"""
+#     users = await user_basedao.get_entities()
+#     return {
+#         "users": [
+#             {
+#                 "user_id": user.user_id,
+#                 "username": user.username,
+#                 "email": user.email,
+#                 "role": user.role
+#             } for user in users
+#         ]
+#     }
 
-@auth_router.get("/user/profile")
-async def get_user_profile(
-    current_user: User_DB = Depends(get_current_active_user)
-):
-    """Любой аутентифицированный пользователь может получить свой профиль"""
-    return {
-        "username": current_user.username,
-        "email": current_user.email,
-        "role": current_user.role,
-        "max_score": current_user.max_score,
-        "money": current_user.money
-    }
+# @auth_router.get("/user/profile")
+# async def get_user_profile(
+#     current_user: User_DB = Depends(get_current_active_user)
+# ):
+#     """Любой аутентифицированный пользователь может получить свой профиль"""
+#     return {
+#         "username": current_user.username,
+#         "email": current_user.email,
+#         "role": current_user.role,
+#         "max_score": current_user.max_score,
+#         "money": current_user.money
+#     }
 
-@auth_router.get("/moderator/stats")
-async def get_moderator_stats(
-    current_user: User_DB = Depends(require_any_role(["moderator", "admin"]))
-):
-    """Модераторы и админы могут получать статистику"""
-    return {
-        "message": "Moderator statistics",
-        "total_users": 100,
-        "active_today": 50
-    }
+# @auth_router.get("/moderator/stats")
+# async def get_moderator_stats(
+#     current_user: User_DB = Depends(require_any_role(["moderator", "admin"]))
+# ):
+#     """Модераторы и админы могут получать статистику"""
+#     return {
+#         "message": "Moderator statistics",
+#         "total_users": 100,
+#         "active_today": 50
+#     }
 
-@auth_router.get("/debug/user/{username}")
-async def debug_user_info(username: str):
-    """Эндпоинт для отладки - получение информации о пользователе"""
-    user = await user_basedao.get_by_username(username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+# @auth_router.get("/debug/user/{username}")
+# async def debug_user_info(username: str):
+#     """Эндпоинт для отладки - получение информации о пользователе"""
+#     user = await user_basedao.get_by_username(username)
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
     
-    return {
-        "user_id": user.user_id,
-        "username": user.username,
-        "email": user.email,
-        "role": user.role,
-        "max_score": user.max_score,
-        "money": user.money
-    }
+#     return {
+#         "user_id": user.user_id,
+#         "username": user.username,
+#         "email": user.email,
+#         "role": user.role,
+#         "max_score": user.max_score,
+#         "money": user.money
+#     }

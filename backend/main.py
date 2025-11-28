@@ -18,6 +18,6 @@ async def lifespan(app: FastAPI):
     
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router, prefix="/v1/auth")
-app.include_router(casino_router, prefix="/roll")
+app.include_router(casino_router, prefix="/v1/casino")
 if __name__ == "__main__":
     uvicorn.run(app)

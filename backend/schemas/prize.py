@@ -16,3 +16,6 @@ class get_prize(BaseModel):
 
 class User_Win(BaseModel):
     username: str
+    
+class User_Bet(BaseModel):
+    bet: int
