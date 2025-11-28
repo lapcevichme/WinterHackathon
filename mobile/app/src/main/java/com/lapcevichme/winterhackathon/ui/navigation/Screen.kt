@@ -2,6 +2,7 @@ package com.lapcevichme.winterhackathon.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
@@ -16,4 +17,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Leaderboard : Screen("leaderboard", "Топ", Icons.Filled.Star)
     object Casino : Screen("casino", "Казино", Icons.Filled.ShoppingCart)
     object Profile : Screen("profile", "Штаб", Icons.Filled.Person)
+    object Game : Screen("game", "Игра", Icons.Filled.Gamepad)
+
 }

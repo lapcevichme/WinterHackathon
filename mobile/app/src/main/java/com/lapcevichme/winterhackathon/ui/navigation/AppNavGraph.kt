@@ -6,9 +6,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.lapcevichme.winterhackathon.GameScreen
 import com.lapcevichme.winterhackathon.presentation.auth.LoginScreen
 import com.lapcevichme.winterhackathon.presentation.casino.CasinoScreenRoot
+import com.lapcevichme.winterhackathon.presentation.leaderboard.LeaderboardScreen
+import com.lapcevichme.winterhackathon.presentation.main.MainScreen
 import com.lapcevichme.winterhackathon.presentation.onboarding.OnboardingScreen
+import com.lapcevichme.winterhackathon.presentation.profile.ProfileScreen
 
 @Composable
 fun AppNavGraph(
@@ -46,5 +50,6 @@ fun AppNavGraph(
         composable(Screen.Leaderboard.route) { LeaderboardScreen() }
         composable(Screen.Casino.route) { CasinoScreenRoot() }
         composable(Screen.Profile.route) { ProfileScreen() }
+        composable(Screen.Game.route) { GameScreen(onCloseGame = { navController.popBackStack() }) }
     }
 }
