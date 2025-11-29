@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,11 +40,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-
+import com.lapcevichme.winterhackathon.domain.model.main.DailyQuest
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(
+    navController: NavController,
+    viewModel: MainViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val infiniteTransition = rememberInfiniteTransition(label = "play_btn")
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -58,95 +66,150 @@ fun MainScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.background, Color(0xFF0F0F16))))
+            // Используем градиент из темы
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.background,
+                        Color(0xFF0F0F16)
+                    )
+                )
+            )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text("Привет, Хуесос!", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge)
-                Text("IT Отдел", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(50),
-                modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+        } else if (uiState.data != null) {
+            val data = uiState.data!!
+
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "🔥 Win Streak: 3",
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(220.dp)
-                .scale(scale)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(MaterialTheme.colorScheme.error, Color(0xFFD32F2F))
+                Column {
+                    Text(
+                        "Привет, ${data.userSummary.displayName}!",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.titleLarge
                     )
-                )
-                .clickable {
-                    navController.navigate("game")
+                    Text(
+                        data.userSummary.department,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(60.dp)
-                )
-                Text("В БОЙ", color = Color.White, style = MaterialTheme.typography.headlineLarge)
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+                ) {
+                    Text(
+                        text = "🔥 Win Streak: ${data.userSummary.winStreak}",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
-        Text("Сейчас в ротации: Flappy Bird", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(40.dp))
 
-        Spacer(modifier = Modifier.weight(1f))
+            // Play Button
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(220.dp)
+                    .scale(scale)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(MaterialTheme.colorScheme.error, Color(0xFFD32F2F))
+                        )
+                    )
+                    .clickable {
+                        navController.navigate("game")
+                    }
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(60.dp)
+                    )
+                    Text("В БОЙ", color = Color.White, style = MaterialTheme.typography.headlineLarge)
+                }
+            }
 
-        // Daily quests
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("ЕЖЕДНЕВНЫЕ ЗАДАНИЯ", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                "Сейчас в ротации: ${data.activeGameName}",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-                DailyQuestItem("Сыграть 3 матча", "1/3", 50)
-                Spacer(modifier = Modifier.height(8.dp))
-                DailyQuestItem("Победить HR отдел", "0/1", 100)
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Daily quests
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "ЕЖЕДНЕВНЫЕ ЗАДАНИЯ",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    data.quests.forEach { quest ->
+                        DailyQuestItem(quest)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        } else if (uiState.error != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Ошибка: ${uiState.error}", color = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
 
 @Composable
-fun DailyQuestItem(title: String, progress: String, reward: Int) {
+fun DailyQuestItem(quest: DailyQuest) {
+    val isDone = quest.isCompleted || quest.currentProgress >= quest.maxProgress
+    val progressColor = if (isDone) Color.Green else MaterialTheme.colorScheme.error
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyLarge)
-            Text(progress, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = quest.title,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isDone) 0.5f else 1f),
+                style = MaterialTheme.typography.bodyLarge,
+                textDecoration = if (isDone) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+            )
+            Text(
+                text = "${quest.currentProgress}/${quest.maxProgress}",
+                color = progressColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
-        Text("+$reward 🪙", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text(
+            text = "+${quest.reward} 🪙",
+            color = if (isDone) Color.Gray else MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
