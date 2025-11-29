@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from database.models import User_DB, Casino_DB, Items_DB
 from database import BaseDao
-
+import random
 from schemas import Prize, get_prize, User_Bet
-from core import get_random_item, get_current_active_user
+from core import get_random_item, decode_access_token
 casino_router = APIRouter()
 
 user_basedao = BaseDao(User_DB)
@@ -27,23 +27,27 @@ async def add_prize_db(prize: Prize):
     return {"message": "success"}
 
 @casino_router.get("/user/balance")
-async def get_user_balance(user: User_DB = Depends(get_current_active_user)):
-    return user.money
+async def get_user_balance(user: User_DB = Depends(decode_access_token)):
+    return {
+        "amount": user.amount,
+        "currency_symbol": random.choice(["❄️", "💰", "$", "RUB"])
+    }
 
 @casino_router.post("/spin")
 async def user_win_to_db(
     bet: User_Bet,
-    user: User_DB = Depends(get_current_active_user)
+    user: User_DB = Depends(decode_access_token)
     ):
-    if user.money < bet.bet:
+    if user.amount < bet.bet:
         raise HTTPException(status_code=402, detail={
             "error_code": "insufficient_funds",
             "message": "Не хватает монет для ставки"
         })
         
     win = await get_random_item()
-    items_dao.create_entity({"user_id":user.user_id, "casino_id":win["item"].casino_id})
-    user.money -= bet.bet + win["itog_rare_price"]
+    items_dao.create_entity({"user_id":user.user_id, "casino_id":win["item"].casino_id, "status":True})
+    user.amount -= bet.bet
+    user.amount += win["item"].amount
     user_basedao.update_entity(user.user_id, user.__dict__)
     return {
         "winner":{
@@ -51,7 +55,7 @@ async def user_win_to_db(
             "name":win["item"].casino_id,
             "description": win["item"].description,
             "type": win["item"].type,
-            "amount": 1,
+            "amount": win["item"].amount,
             "emoji":win["item"].amoji,
             "color_hex": win["itog_rare"]
         },
