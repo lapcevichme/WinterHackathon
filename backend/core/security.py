@@ -13,7 +13,7 @@ from schemas import User_Login
 import secrets
 
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login", scheme_name="JWT")
 user_dao = BaseDao(User_DB)
 token_dao = BaseDao(RefreshToken_DB)
 
@@ -26,11 +26,11 @@ async def get_password_hash(password) -> str:
 async def get_user(username: str) -> Optional[User_DB]:
     return await user_dao.get_by_username(username)
 
-async def authenticate_user(user_login: User_Login) -> Optional[User_DB]:
-    user: User_DB = await get_user(user_login.username)
+async def authenticate_user(username: str, password: str) -> Optional[User_DB]:
+    user: User_DB = await get_user(username)
     if not user:
         return False
-    if not await verify_password(user_login.password, user.password):
+    if not await verify_password(password, user.password):
         return False
     return user
 

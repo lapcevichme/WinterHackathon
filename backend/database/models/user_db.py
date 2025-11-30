@@ -32,7 +32,6 @@ class User_DB(Base):
     level: Mapped[int] = mapped_column(Integer, default=0)
     amount: Mapped[int] = mapped_column(Integer, default=0)
     energy: Mapped[int] = mapped_column(Integer, default=10)
-    next_refill_in_seconds: Mapped[int] = mapped_column(Integer, default=300)
     team_uid: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey('teams.team_id'), 

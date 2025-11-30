@@ -3,7 +3,7 @@ from database.models import User_DB, Casino_DB, Items_DB, Quests_DB
 from database import BaseDao
 import random
 from schemas import Prize, get_prize, User_Bet, Redact_User
-from core import decode_access_token, generate_qr_base64
+from core import decode_access_token, generate_qr_base64, get_time_diff_seconds, research_user_energy
 import uuid
 user_router = APIRouter()
 
@@ -35,7 +35,7 @@ async def get_user_info(user: User_DB = Depends(decode_access_token)):
 async def patch_user(redact_info: Redact_User, user: User_DB = Depends(decode_access_token)):
     user.display_name = redact_info.display_name
     user.url = redact_info.url
-    await user_basedao.update_entity(user.id, user)
+    await user_basedao.update_entity(user.user_id, user)
     return user
 
 @user_router.get("/profile/inventory/{id}/code")
@@ -47,9 +47,17 @@ async def get_qr(id: str):
     
 @user_router.get("/leaderboard")
 async def get_leaderboard():
-    leader = await user_basedao.get_entities()
-    leader = sorted(leader.__dict__.items(), key=lambda x: x[1][5])
-    return leader[:10]
+    leaders = await user_basedao.get_entities()
+    leaders_sorted = sorted(leaders, key=lambda user: user.max_score, reverse=True)
+    top_users = leaders_sorted[:10]
+    return [
+        {
+            "username": user.username,
+            "max_score": user.max_score,
+            "amount": user.amount
+        }
+        for user in top_users
+    ]
 
 @user_router.post("/quests/{id}/claim")
 async def claim_quest(id: uuid.UUID):
@@ -67,7 +75,9 @@ async def claim_quest(id: uuid.UUID):
     
 @user_router.get("/main")
 async def get_main_info(user: User_DB = Depends(decode_access_token)):
-    return{
+  next_refill = research_user_energy(user)
+  user = user_basedao.get_entity_by_id(user.user_id)
+  return{
   "user_summary": {
     "id": user.user_id,
     "display_name": user.display_name,
@@ -77,8 +87,8 @@ async def get_main_info(user: User_DB = Depends(decode_access_token)):
     },
     "energy": {
       "current": user.energy,
-      "max": 5,
-      "next_refill_in_seconds": user.next_refill_in_seconds
+      "max": 10,
+      "next_refill_in_seconds": next_refill
     }
   },
   "quests":user.quests

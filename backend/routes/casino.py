@@ -43,7 +43,11 @@ async def user_win_to_db(
             "error_code": "insufficient_funds",
             "message": "Не хватает монет для ставки"
         })
-        
+    if bet.bet <= 10:
+        raise HTTPException(status_code=402, detail={
+            "error_code": "insufficient_funds",
+            "message": "Ставка слишком мала"
+        })
     win = await get_random_item()
     items_dao.create_entity({"user_id":user.user_id, "casino_id":win["item"].casino_id, "status":True})
     user.amount -= bet.bet

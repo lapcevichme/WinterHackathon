@@ -34,7 +34,7 @@ class BaseDao(Generic[ModelType]):
             result = await session.execute(
                 select(self.model)
             )
-            return result.scalars().all()
+            return result.unique().scalars().all()
         
 
     async def get_by_username(self, username: str):

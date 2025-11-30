@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
     await create_db()
     print("Database connected!")
     yield
-    await drop_db()
+    #await drop_db()
     print("The app is shutting down!")
     
     

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class RefreshToken_DB(Base):
     __tablename__ = "refresh_tokens"
     
-    id: Mapped[uuid.UUID] = mapped_column(
+    token_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         primary_key=True, 
         default=uuid.uuid4
@@ -20,7 +20,7 @@ class RefreshToken_DB(Base):
     
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     
-    user_uid: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey('users.user_id'), 
         nullable=False
