@@ -7,6 +7,7 @@ async def get_time_diff_seconds(user: User_DB) -> float:
     time_diff = current_time - user.update_at
     return time_diff.total_seconds()
 
+
 async def research_user_energy(user: User_DB):
     seconds = get_time_diff_seconds(user)
     if user.energy + seconds // 300 >= 10:

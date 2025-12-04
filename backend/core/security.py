@@ -43,7 +43,8 @@ async def create_access_token(user: User_DB, expires_delta: timedelta | None = N
     to_encode = {
         "sub":user.username,
         "exp":expire,
-        "type":"access"
+        "type":"access",
+        "role": user.role
     }
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -66,6 +67,18 @@ async def decode_access_token(token: Annotated[str, Depends(oauth2_scheme)]) -> 
     except InvalidTokenError:
         raise HTTPException("inkorrect token")
 
+async def decode_role(token: Annotated[str, Depends(oauth2_scheme)]) -> User_DB:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        user = await get_user(username)
+        if payload.get("role"):   
+            raise HTTPException("uncorrect role")
+        return user
+    except InvalidTokenError:
+        raise HTTPException("inkorrect token")
 async def get_refresh_token(refresh_token:str):
     token: RefreshToken_DB = await token_dao.get_by_name(refresh_token)
     return token

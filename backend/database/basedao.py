@@ -55,10 +55,21 @@ class BaseDao(Generic[ModelType]):
                 select(self.model).where(self.model.name == name)
             )
             return result.scalars().first()
+    async def get_by_token(self, token: str):
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(self.model.token == token)
+            )
+            return result.scalars().first()
     
     async def get_all_name_by_rare(self, rare:str):
         async with self.async_session_maker() as session:
             result = await session.execute(select(self.model).where(self.model.rare == rare))
+        return result.scalars().all()
+    
+    async def get_all_by_score(self, score: int):
+        async with self.async_session_maker() as session:
+            result = await session.execute(select(self.model).where(abs(self.model.rare - score)))
         return result.scalars().all()
     
     async def update_entity(self, id: uuid.UUID, data: Dict[str, Any]):

@@ -11,7 +11,7 @@ from config import settings
 auth_router = APIRouter()
 user_basedao = BaseDao(User_DB)
 
-@auth_router.post("/register")
+@auth_router.post("/register", tags=["auth"])
 async def register_user(user: User) -> Token:
     existing_user = await user_basedao.get_by_username(user.username)
     if existing_user :
@@ -36,7 +36,7 @@ async def register_user(user: User) -> Token:
         "refresh_token":refresh_token
     }
     
-@auth_router.post("/login")
+@auth_router.post("/login", tags=["auth"])
 async def register_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -53,7 +53,7 @@ async def register_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends(
         "refresh_token":refresh_token
     }
 
-@auth_router.post("/refresh")
+@auth_router.post("/refresh", tags=["auth"])
 async def refresh_tokens(
     request: RefreshTokenRequest,
 ):
@@ -78,8 +78,7 @@ async def refresh_tokens(
         "refresh_token": new_refresh_token,
     }
 
-@auth_router.post("/logout")
+@auth_router.post("/logout", tags=["auth"])
 async def logout(request: RefreshTokenRequest):
-    
     await delete_refresh_token(request.refresh_token)
     return {"message": "Successfully logged out"}

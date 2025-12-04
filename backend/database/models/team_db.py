@@ -23,6 +23,7 @@ class Team_DB(Base):
     
     team_name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     max_score: Mapped[int] = mapped_column(Integer, default=0)
+    score: Mapped[int] = mapped_column(Integer, default=0)
     amount: Mapped[int] = mapped_column(Integer, default=0)
     
     users: Mapped[List['User_DB']] = relationship('User_DB', back_populates='team', lazy="joined")
