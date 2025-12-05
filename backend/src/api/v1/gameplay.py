@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from core.security import auth_user, require
+from core.config import settings
 from database.relational_db import User
 from service.gameplay import (
     get_casino_service,

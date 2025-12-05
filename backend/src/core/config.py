@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     GAME_URL: str = "https://lapcevichme.github.io/WinterHackathon/"
     GAME_ENERGY_COST: int = 1
 
+settings = Settings()
 
 def configure_logging():
     logging.basicConfig(
