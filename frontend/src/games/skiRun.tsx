@@ -35,8 +35,8 @@ const getSkiParams = (width: number, height: number) => {
   const trackHalfWidth = Math.max(isMobile ? 60 : 70, width * (isMobile ? 0.22 : 0.18))
   const margin = Math.max(isMobile ? 36 : 48, width * (isMobile ? 0.12 : 0.1))
   const deltaXRange = Math.max(isMobile ? width * 0.22 : width * 0.12, isMobile ? 60 : 40)
-  const verticalSpeed = isMobile ? 4.9 : 4.4
-  const horizontalSpeed = isMobile ? 5 : 4.2
+  const verticalSpeed = isMobile ? 4 : 3.6
+  const horizontalSpeed = isMobile ? 4.2 : 3.6
   const skierYFactor = isMobile ? 0.32 : 0.35
   return {
     segmentLength,

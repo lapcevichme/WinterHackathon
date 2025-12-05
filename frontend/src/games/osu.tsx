@@ -248,34 +248,35 @@ function OsuGame({ onSendScore }: OsuProps) {
   }
 
   const drawGift = (ctx: CanvasRenderingContext2D, size: number) => {
-    const boxSize = size
+    const boxSize = size * 0.8
     const half = boxSize / 2
-    const lidHeight = boxSize * 0.35
-    const bowSize = boxSize * 0.3
-    const ribbonWidth = Math.max(4, boxSize * 0.08)
+    const lidHeight = boxSize * 0.18
+    const ribbonWidth = Math.max(3, boxSize * 0.08)
 
     ctx.fillStyle = '#ef4444'
-    ctx.fillRect(-half, -boxSize * 0.2, boxSize, boxSize * 0.9)
+    ctx.fillRect(-half, -half, boxSize, boxSize)
 
     ctx.fillStyle = '#dc2626'
-    ctx.fillRect(-half, -boxSize * 0.2 - lidHeight * 0.15, boxSize, lidHeight * 0.35)
+    ctx.fillRect(-half, -half, boxSize, lidHeight)
 
     ctx.fillStyle = '#f59e0b'
-    ctx.fillRect(-ribbonWidth / 2, -boxSize * 0.2 - lidHeight * 0.15, ribbonWidth, boxSize * 0.9 + lidHeight * 0.15)
-    ctx.fillRect(-half, boxSize * 0.05, boxSize, ribbonWidth)
+    ctx.fillRect(-ribbonWidth / 2, -half, ribbonWidth, boxSize)
+    ctx.fillRect(-half, -ribbonWidth / 2, boxSize, ribbonWidth)
 
+    const bowWidth = boxSize * 0.32
+    const bowHeight = boxSize * 0.2
+    const bowY = -half + lidHeight * 0.4
     ctx.fillStyle = '#fde68a'
     ctx.beginPath()
-    ctx.moveTo(-bowSize * 0.1, -boxSize * 0.2 - lidHeight * 0.05)
-    ctx.quadraticCurveTo(-bowSize * 0.6, -boxSize * 0.45, -bowSize * 0.05, -boxSize * 0.5)
-    ctx.quadraticCurveTo(0, -boxSize * 0.32, bowSize * 0.05, -boxSize * 0.5)
-    ctx.quadraticCurveTo(bowSize * 0.6, -boxSize * 0.45, bowSize * 0.1, -boxSize * 0.2 - lidHeight * 0.05)
+    ctx.moveTo(-bowWidth * 0.1, bowY)
+    ctx.quadraticCurveTo(-bowWidth * 0.7, bowY - bowHeight, 0, bowY - bowHeight * 0.9)
+    ctx.quadraticCurveTo(bowWidth * 0.7, bowY - bowHeight, bowWidth * 0.1, bowY)
     ctx.closePath()
     ctx.fill()
 
     ctx.fillStyle = '#fef9c3'
     ctx.beginPath()
-    ctx.arc(0, -boxSize * 0.27, ribbonWidth * 0.9, 0, Math.PI * 2)
+    ctx.arc(0, bowY - bowHeight * 0.35, ribbonWidth, 0, Math.PI * 2)
     ctx.fill()
   }
 
