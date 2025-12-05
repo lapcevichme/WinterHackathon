@@ -6,6 +6,8 @@ type GameState = 'ready' | 'playing' | 'over'
 type SkiSegment = {
   y: number
   center: number
+  snowLeft?: SnowDot[]
+  snowRight?: SnowDot[]
 }
 
 type SnowFlake = {
@@ -17,6 +19,12 @@ type SnowFlake = {
   phase: number
   opacity: number
   layer: number
+}
+
+type SnowDot = {
+  t: number
+  radius: number
+  offset: number
 }
 
 type SkiRunProps = {
@@ -220,6 +228,7 @@ function SkiRunGame({ onSendScore }: SkiRunProps) {
     for (let y = 0; y <= height + params.segmentBuffer; y += params.segmentLength) {
       segments.push({ y, center: startCenter })
     }
+    assignSnowForRange(segments, params)
     segmentsRef.current = segments
   }
 
@@ -241,7 +250,35 @@ function SkiRunGame({ onSendScore }: SkiRunProps) {
         y: last.y + params.segmentLength,
         center: nextCenter,
       })
+      assignSnowForEdge(segments[segments.length - 2], segments[segments.length - 1], params)
     }
+  }
+
+  const assignSnowForRange = (segments: SkiSegment[], params: ReturnType<typeof getSkiParams>) => {
+    for (let i = 0; i < segments.length - 1; i++) {
+      assignSnowForEdge(segments[i], segments[i + 1], params)
+    }
+  }
+
+  const assignSnowForEdge = (
+    a: SkiSegment,
+    b: SkiSegment,
+    params: ReturnType<typeof getSkiParams>,
+  ) => {
+    const dx = b.center - a.center
+    const dy = b.y - a.y
+    const length = Math.hypot(dx, dy) || 1
+    const dots = Math.max(4, Math.floor(length / (params.segmentLength * 0.12)))
+    const snowDots: SnowDot[] = []
+    for (let j = 0; j <= dots; j++) {
+      snowDots.push({
+        t: j / dots,
+        radius: params.margin * (0.06 + Math.random() * 0.08),
+        offset: (Math.random() * 2 - 1) * params.margin * 0.05,
+      })
+    }
+    a.snowLeft = snowDots
+    a.snowRight = snowDots.map((dot) => ({ ...dot }))
   }
 
   const getCenterAt = (targetY: number) => {
@@ -268,40 +305,101 @@ function SkiRunGame({ onSendScore }: SkiRunProps) {
     const params = getSkiParams(width, height)
     const skierY = height * params.skierYFactor
 
-    ctx.fillStyle = '#0b1f36'
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height)
+    bgGrad.addColorStop(0, '#0b1729')
+    bgGrad.addColorStop(1, '#0f223b')
+    ctx.fillStyle = bgGrad
     ctx.fillRect(0, 0, width, height)
 
     const segments = segmentsRef.current
     for (let i = 0; i < segments.length - 1; i++) {
       const a = segments[i]
       const b = segments[i + 1]
+      const snowGrad = ctx.createLinearGradient(0, a.y, 0, b.y)
+      snowGrad.addColorStop(0, '#e2f1ff')
+      snowGrad.addColorStop(1, '#c8d8ec')
       ctx.beginPath()
       ctx.moveTo(a.center - params.trackHalfWidth, a.y)
       ctx.lineTo(a.center + params.trackHalfWidth, a.y)
       ctx.lineTo(b.center + params.trackHalfWidth, b.y)
       ctx.lineTo(b.center - params.trackHalfWidth, b.y)
       ctx.closePath()
-      ctx.fillStyle = '#1e293b'
+      ctx.fillStyle = snowGrad
       ctx.fill()
-      ctx.strokeStyle = '#94a3b8'
-      ctx.lineWidth = 2
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
+      ctx.lineWidth = 3
       ctx.stroke()
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+      const edges = [
+        {
+          x1: a.center - params.trackHalfWidth,
+          y1: a.y,
+          x2: b.center - params.trackHalfWidth,
+          y2: b.y,
+          dots: a.snowLeft,
+        },
+        {
+          x1: a.center + params.trackHalfWidth,
+          y1: a.y,
+          x2: b.center + params.trackHalfWidth,
+          y2: b.y,
+          dots: a.snowRight,
+        },
+      ]
+      edges.forEach((edge) => {
+        const dx = edge.x2 - edge.x1
+        const dy = edge.y2 - edge.y1
+        const len = Math.hypot(dx, dy) || 1
+        const nx = -dy / len
+        const ny = dx / len
+        const dots = edge.dots ?? []
+        dots.forEach((dot) => {
+          const x = edge.x1 + dx * dot.t
+          const y = edge.y1 + dy * dot.t
+          const jitterX = nx * dot.offset
+          const jitterY = ny * dot.offset
+          ctx.beginPath()
+          ctx.arc(x + jitterX, y + jitterY, dot.radius, 0, Math.PI * 2)
+          ctx.fill()
+        })
+      })
     }
 
     const skier = skierRef.current
     ctx.save()
     ctx.translate(skier.x, skierY)
-    ctx.fillStyle = '#e11d48'
+    ctx.rotate(skier.direction === SKI_DIRECTION.LEFT ? -0.08 : 0.08)
+    ctx.strokeStyle = '#1f2937'
+    ctx.lineWidth = 3
     ctx.beginPath()
-    ctx.moveTo(0, -18)
-    ctx.lineTo(14, 16)
-    ctx.lineTo(-14, 16)
-    ctx.closePath()
+    ctx.moveTo(-14, 18)
+    ctx.lineTo(14, 18)
+    ctx.stroke()
+    ctx.strokeStyle = '#0ea5e9'
+    ctx.lineWidth = 4
+    ctx.beginPath()
+    ctx.moveTo(-16, 16)
+    ctx.lineTo(16, 12)
+    ctx.stroke()
+    const torsoGrad = ctx.createLinearGradient(0, -16, 0, 14)
+    torsoGrad.addColorStop(0, '#f87171')
+    torsoGrad.addColorStop(1, '#b91c1c')
+    ctx.fillStyle = torsoGrad
+    ctx.beginPath()
+    ctx.roundRect(-10, -16, 20, 28, 6)
     ctx.fill()
     ctx.fillStyle = '#f8fafc'
-    ctx.fillRect(-3, -10, 6, 10)
+    ctx.beginPath()
+    ctx.arc(0, -20, 8, 0, Math.PI * 2)
+    ctx.fill()
     ctx.fillStyle = '#0ea5e9'
-    ctx.fillRect(-6, 4, 12, 4)
+    ctx.fillRect(-8, 6, 16, 6)
+    ctx.fillStyle = '#0f172a'
+    ctx.beginPath()
+    ctx.arc(-3, -21, 2, 0, Math.PI * 2)
+    ctx.arc(3, -21, 2, 0, Math.PI * 2)
+    ctx.fill()
     ctx.restore()
 
     drawSnow(ctx, width)
