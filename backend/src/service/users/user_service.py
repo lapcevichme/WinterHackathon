@@ -11,7 +11,7 @@ from core.config import Settings
 from database.redis import CacheRepo
 from domain.users import UserPatch
 from database.relational_db import (
-    LanguagesInterface,
+    # LanguagesInterface,
     RolesInterface,
     UserInterface,
     UoW,
@@ -27,13 +27,13 @@ class UserService:
         self,
         uow: UoW,
         user_repo: UserInterface,
-        lang_repo: LanguagesInterface,
+        # lang_repo: LanguagesInterface,
         role_repo: RolesInterface,
         cache_repo: CacheRepo | None = None,
     ):
         self.uow = uow
         self.user_repo = user_repo
-        self.lang_repo = lang_repo
+        # self.lang_repo = lang_repo
         self.role_repo = role_repo
         self.cache_repo = cache_repo
         
@@ -140,8 +140,8 @@ class UserService:
         # await self._invalidate_permissions_cache(target.id, previous_version)
         return target
 
-    async def list_languages(self, search: str, limit: int):
-        return await self.lang_repo.search(search, limit)
+    # async def list_languages(self, search: str, limit: int):
+    #     return await self.lang_repo.search(search, limit)
 
     async def admin_assign_roles(
         self,
