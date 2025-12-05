@@ -10,6 +10,7 @@ type OsuTarget = {
   radius: number
   born: number
   lifespan: number
+  kind: 'gift' | 'coal'
 }
 
 type SnowFlake = {
@@ -28,7 +29,8 @@ type OsuProps = {
 }
 
 const OSU_LIFESPAN = 1600
-const OSU_SPAWN_INTERVAL = 900
+const OSU_SPAWN_INTERVAL_BASE = 900
+const COAL_CHANCE = 0.10
 
 function OsuGame({ onSendScore }: OsuProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -102,12 +104,26 @@ function OsuGame({ onSendScore }: OsuProps) {
     })
 
     if (hitIndex >= 0) {
-      targets.splice(hitIndex, 1)
-      setScore((prev) => {
-        const next = prev + 1
-        scoreRef.current = next
-        return next
-      })
+      const hit = targets.splice(hitIndex, 1)[0]
+      if (hit.kind === 'gift') {
+        setScore((prev) => {
+          const next = prev + 1
+          scoreRef.current = next
+          return next
+        })
+      } else {
+        setScore((prev) => {
+          const next = prev - 5
+          scoreRef.current = next
+          if (next <= 0) {
+            endGame(next)
+          }
+          return next
+        })
+        if (scoreRef.current <= 0) {
+          return
+        }
+      }
     }
   }
 
@@ -152,14 +168,23 @@ function OsuGame({ onSendScore }: OsuProps) {
 
     const targets = targetsRef.current
 
-    if (!targets.length || timestamp - lastSpawnRef.current > OSU_SPAWN_INTERVAL) {
+    if (!targets.length || timestamp - lastSpawnRef.current > getSpawnInterval()) {
       spawnTarget(timestamp)
     }
 
-    const expired = targets.find((target) => timestamp - target.born > target.lifespan)
-    if (expired) {
-      endGame(scoreRef.current)
-    }
+    const remaining: OsuTarget[] = []
+    let giftExpired = false
+    targets.forEach((target) => {
+      if (timestamp - target.born > target.lifespan) {
+        if (target.kind === 'gift') {
+          giftExpired = true
+        }
+      } else {
+        remaining.push(target)
+      }
+    })
+    targetsRef.current = remaining
+    if (giftExpired) endGame(scoreRef.current)
   }
 
   const endGame = (finalScore: number) => {
@@ -175,10 +200,12 @@ function OsuGame({ onSendScore }: OsuProps) {
     if (!canvas) return
     const now = timestamp ?? performance.now()
     const baseRadius = Math.max(28, Math.min(44, canvas.width * 0.05))
-    const padding = baseRadius + 18
-    const x = padding + Math.random() * Math.max(10, canvas.width - padding * 2)
-    const y = padding + Math.random() * Math.max(10, canvas.height - padding * 2)
+    const paddingX = Math.max(baseRadius + 28, canvas.width * 0.1)
+    const paddingY = Math.max(baseRadius + 140, canvas.height * 0.22)
+    const x = paddingX + Math.random() * Math.max(10, canvas.width - paddingX * 2)
+    const y = paddingY + Math.random() * Math.max(10, canvas.height - paddingY * 2)
     const lifespan = OSU_LIFESPAN
+    const kind: 'gift' | 'coal' = Math.random() < COAL_CHANCE ? 'coal' : 'gift'
 
     targetsRef.current.push({
       id: nextIdRef.current++,
@@ -187,8 +214,15 @@ function OsuGame({ onSendScore }: OsuProps) {
       radius: baseRadius,
       born: now,
       lifespan,
+      kind,
     })
     lastSpawnRef.current = now
+  }
+
+  const getSpawnInterval = () => {
+    const tiers = Math.floor(scoreRef.current / 10)
+    const reduction = Math.min(0.5, tiers * 0.06)
+    return OSU_SPAWN_INTERVAL_BASE * (1 - reduction)
   }
 
   const drawScene = () => {
@@ -211,7 +245,8 @@ function OsuGame({ onSendScore }: OsuProps) {
       ctx.save()
       ctx.translate(target.x, target.y)
 
-      ctx.strokeStyle = 'rgba(103, 232, 249, 0.6)'
+      const accent = target.kind === 'gift' ? 'rgba(103, 232, 249, 0.6)' : 'rgba(148, 163, 184, 0.65)'
+      ctx.strokeStyle = accent
       ctx.lineWidth = 6
       const approachRadius = radius + 18 * lifeRatio
       ctx.beginPath()
@@ -226,20 +261,28 @@ function OsuGame({ onSendScore }: OsuProps) {
         0,
         radius,
       )
-      bodyGradient.addColorStop(0, '#38bdf8')
-      bodyGradient.addColorStop(1, '#2563eb')
+      if (target.kind === 'gift') {
+        bodyGradient.addColorStop(0, '#38bdf8')
+        bodyGradient.addColorStop(1, '#2563eb')
+      } else {
+        bodyGradient.addColorStop(0, '#cbd5e1')
+        bodyGradient.addColorStop(1, '#475569')
+      }
       ctx.fillStyle = bodyGradient
       ctx.beginPath()
       ctx.arc(0, 0, radius, 0, Math.PI * 2)
       ctx.fill()
 
-      ctx.strokeStyle = '#facc15'
-      ctx.lineWidth = 5
-      ctx.beginPath()
-      ctx.arc(0, 0, radius * 0.8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * lifeRatio)
-      ctx.stroke()
-
-      drawGift(ctx, radius * 0.9)
+      if (target.kind === 'gift') {
+        ctx.strokeStyle = '#facc15'
+        ctx.lineWidth = 5
+        ctx.beginPath()
+        ctx.arc(0, 0, radius * 0.8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * lifeRatio)
+        ctx.stroke()
+        drawGift(ctx, radius * 0.9)
+      } else {
+        drawCoal(ctx, radius * 0.7, lifeRatio)
+      }
 
       ctx.restore()
     })
@@ -277,6 +320,29 @@ function OsuGame({ onSendScore }: OsuProps) {
     ctx.fillStyle = '#fef9c3'
     ctx.beginPath()
     ctx.arc(0, bowY - bowHeight * 0.35, ribbonWidth, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  const drawCoal = (ctx: CanvasRenderingContext2D, size: number, lifeRatio: number) => {
+    const base = size
+    ctx.fillStyle = '#111827'
+    ctx.beginPath()
+    ctx.arc(0, 0, base, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.fillStyle = '#1f2937'
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI / 2) * i + lifeRatio * 0.5
+      const rx = Math.cos(angle) * base * 0.4
+      const ry = Math.sin(angle) * base * 0.4
+      ctx.beginPath()
+      ctx.ellipse(rx, ry, base * 0.35, base * 0.22, angle, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    ctx.fillStyle = '#9ca3af'
+    ctx.beginPath()
+    ctx.arc(-base * 0.2, -base * 0.25, base * 0.15, 0, Math.PI * 2)
     ctx.fill()
   }
 
