@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
 
+    # Gameplay
+    GAME_URL: str = "https://lapcevichme.github.io/WinterHackathon/"
+    GAME_ENERGY_COST: int = 1
+
 
 def configure_logging():
     logging.basicConfig(

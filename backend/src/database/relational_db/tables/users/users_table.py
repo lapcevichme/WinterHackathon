@@ -1,9 +1,13 @@
 from uuid import UUID, uuid4
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import Uuid, String, Boolean, DateTime, Text, Index, Integer
+from sqlalchemy import Uuid, String, Boolean, DateTime, Text, Index, Integer, ForeignKey
 
 from ..table_base import Base
+
+if TYPE_CHECKING:
+    from ..gameplay import Team, InventoryItem
 from ..mixins import TimestampMixin
 
 class User(TimestampMixin, Base):
@@ -20,6 +24,8 @@ class User(TimestampMixin, Base):
     username: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
     display_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
     profile_pic_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    team_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("teams.id"), nullable=True)
     
     # Game progression (from legacy schema)
     max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -56,6 +62,18 @@ class User(TimestampMixin, Base):
         secondary="user_roles",
         back_populates="users",
         lazy="selectin",
+    )
+    team: Mapped["Team | None"] = relationship(
+        "Team",
+        back_populates="users",
+        lazy="selectin",
+        uselist=False,
+    )
+    items: Mapped[list["InventoryItem"]] = relationship(
+        "InventoryItem",
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan",
     )
     
     @property
