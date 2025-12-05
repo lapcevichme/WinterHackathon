@@ -7,10 +7,6 @@ app = 'winter-hack'
 primary_region = 'fra'
 
 [build]
-  builder = 'paketobuildpacks/builder:base'
-
-[env]
-  PORT = '8080'
 
 [http_service]
   internal_port = 8080
