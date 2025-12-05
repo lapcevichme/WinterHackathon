@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 
 from database import async_session_maker
-
+import uuid
 ModelType = TypeVar("ModelType")
 
 class BaseDao(Generic[ModelType]):
@@ -22,7 +22,7 @@ class BaseDao(Generic[ModelType]):
             await session.refresh(obj)
             return obj
     
-    async def get_entity_by_id(self, id: int):
+    async def get_entity_by_id(self, id: uuid.UUID):
         async with self.async_session_maker() as session:
             result = await session.execute(
                 select(self.model).where(getattr(self.model, self._id_name) == id)
@@ -34,7 +34,7 @@ class BaseDao(Generic[ModelType]):
             result = await session.execute(
                 select(self.model)
             )
-            return result.scalars().all()
+            return result.unique().scalars().all()
         
 
     async def get_by_username(self, username: str):
@@ -43,10 +43,22 @@ class BaseDao(Generic[ModelType]):
                 select(self.model).where(self.model.username == username)
             )
             return result.scalars().first()
+    async def get_by_email(self, email: str):
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(self.model.email == email)
+            )
+            return result.scalars().first()
     async def get_by_name(self, name: str):
         async with self.async_session_maker() as session:
             result = await session.execute(
                 select(self.model).where(self.model.name == name)
+            )
+            return result.scalars().first()
+    async def get_by_token(self, token: str):
+        async with self.async_session_maker() as session:
+            result = await session.execute(
+                select(self.model).where(self.model.token == token)
             )
             return result.scalars().first()
     
@@ -55,7 +67,12 @@ class BaseDao(Generic[ModelType]):
             result = await session.execute(select(self.model).where(self.model.rare == rare))
         return result.scalars().all()
     
-    async def update_entity(self, id: int, data: Dict[str, Any]):
+    async def get_all_by_score(self, score: int):
+        async with self.async_session_maker() as session:
+            result = await session.execute(select(self.model).where(abs(self.model.rare - score)))
+        return result.scalars().all()
+    
+    async def update_entity(self, id: uuid.UUID, data: Dict[str, Any]):
         async with self.async_session_maker() as session:
             result = await session.execute(
                 select(self.model).where(getattr(self.model, self._id_name) == id)
@@ -68,7 +85,7 @@ class BaseDao(Generic[ModelType]):
                 await session.refresh(obj)
             return obj
     
-    async def delete_entity(self, id: int):
+    async def delete_entity_by_id(self, id: uuid.UUID):
         async with self.async_session_maker() as session:
             result = await session.execute(
                 select(self.model).where(getattr(self.model, self._id_name) == id)

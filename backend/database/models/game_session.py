@@ -5,26 +5,33 @@ from typing import Optional, TYPE_CHECKING
 import uuid
 from database import Base
 
+
 if TYPE_CHECKING:
     from .user_db import User_DB
     
-class Items_DB(Base):
-    __tablename__ = "items"
+
+class Game_session_DB(Base):
+    __tablename__ = "game_session"
     
-    item_id: Mapped[uuid.UUID] = mapped_column(
+    game_session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4
     )
-    casino_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("casino.item_id"),
-        nullable=False
-    )
-    status: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    user_1: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.user_id"),
         nullable=False
     )
-    user: Mapped[Optional['User_DB']] = relationship('User_DB', back_populates='items', lazy="joined")
+    user_2: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=False
+    )
+    winner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), 
+        ForeignKey('users.user_id'), 
+        nullable=True
+    )
+    game_score: Mapped[int] = mapped_column(Integer, default=0)
