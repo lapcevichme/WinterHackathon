@@ -39,3 +39,14 @@ class UserPatch(BaseModel):
 
 class UserRolesUpdate(BaseModel):
     roles: list[str] = Field(default_factory=list, description="Role slugs to assign")
+
+
+class TeamModel(BaseModel):
+    id: UUID
+    name: str
+    score: int
+    max_score: int
+
+
+class TeamJoinRequest(BaseModel):
+    team_id: UUID

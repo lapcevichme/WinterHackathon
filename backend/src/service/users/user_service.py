@@ -50,6 +50,11 @@ class UserService:
             
         await self.uow.session.refresh(user)
 
+    async def set_team(self, user: User, team_id: UUID | None):
+        user.team_id = team_id
+        await self.uow.commit()
+        await self.uow.session.refresh(user)
+
     async def add_picture(
         self,
         file: UploadFile,
