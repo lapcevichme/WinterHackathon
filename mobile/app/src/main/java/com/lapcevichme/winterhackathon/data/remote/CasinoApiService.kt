@@ -6,6 +6,14 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+interface CasinoApiService {
+    @GET("user/balance")
+    suspend fun getUserBalance(): BalanceResponse
+
+    @POST("casino/spin")
+    suspend fun spin(@Body request: SpinRequest): SpinResponseDto
+}
+
 @Serializable
 data class BalanceResponse(
     @SerialName("balance")
@@ -47,11 +55,3 @@ data class PrizeDto(
     @SerialName("color_hex")
     val colorHex: String
 )
-
-interface CasinoApiService {
-    @GET("user/balance")
-    suspend fun getUserBalance(): BalanceResponse
-
-    @POST("casino/spin")
-    suspend fun spin(@Body request: SpinRequest): SpinResponseDto
-}

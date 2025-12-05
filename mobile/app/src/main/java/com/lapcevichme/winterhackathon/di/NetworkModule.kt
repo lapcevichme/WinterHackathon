@@ -2,6 +2,8 @@ package com.lapcevichme.winterhackathon.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
+import com.lapcevichme.winterhackathon.data.remote.LeaderboardApi
+import com.lapcevichme.winterhackathon.data.remote.ProfileApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,5 +39,17 @@ object NetworkModule {
     @Singleton
     fun provideCasinoApi(retrofit: Retrofit): CasinoApiService {
         return retrofit.create(CasinoApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLeaderboardApi(retrofit: Retrofit): LeaderboardApi {
+        return retrofit.create(LeaderboardApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileApi(retrofit: Retrofit): ProfileApiService {
+        return retrofit.create(ProfileApiService::class.java)
     }
 }

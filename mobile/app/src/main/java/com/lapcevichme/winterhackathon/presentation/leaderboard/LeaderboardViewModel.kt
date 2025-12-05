@@ -31,6 +31,10 @@ class LeaderboardViewModel @Inject constructor(
         loadLeaderboard(type)
     }
 
+    fun refresh() {
+        loadLeaderboard(_uiState.value.selectedType)
+    }
+
     private fun loadLeaderboard(type: LeaderboardType) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
