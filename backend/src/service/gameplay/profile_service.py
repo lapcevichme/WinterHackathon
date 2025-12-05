@@ -86,6 +86,7 @@ class ProfileService:
                     color_hex=item.prize.color_hex,
                 )
                 for item in db_user.items
+                if ItemStatus(item.status) == ItemStatus.AVAILABLE
             ],
         )
 

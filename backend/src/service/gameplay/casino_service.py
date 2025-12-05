@@ -84,7 +84,9 @@ class CasinoService:
         item = await self.inventory_repo.get_by_id(item_id)
         if item is None or item.user_id != user.id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Item not found")
-
+        if ItemStatus(item.status) == ItemStatus.REDEEMED:
+            raise HTTPException(status.HTTP_410_GONE, "Item already redeemed")
+        
         token_value = generate_qr_token()
         token_row = TokenQR(
             token=token_value,

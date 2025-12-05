@@ -36,6 +36,10 @@ class AdminService:
         item = await self.inventory_repo.get_by_id(token_row.item_id)
         if item is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+        if ItemStatus(item.status) == ItemStatus.REDEEMED:
+            await self.token_repo.delete(token_row)
+            await self.uow.commit()
+            raise HTTPException(status.HTTP_410_GONE, detail="Item already redeemed")
         prize = await self.prizes_repo.get_by_id(item.prize_id)
         user = await self.uow.session.get(User, item.user_id)
 
