@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FlappyGame from './games/fbird'
 import OsuGame from './games/osu'
+import LumberjackGame from './games/Lumberjack'
 import SkiRunGame from './games/skiRun'
 import './App.css'
 
@@ -13,7 +14,7 @@ declare global {
   }
 }
 
-type GameTab = 'flappy' | 'osu' | 'ski'
+type GameTab = 'flappy' | 'osu' | 'ski' | 'lumberjack'
 
 function App() {
   const [activeGame, setActiveGame] = useState<GameTab>('flappy')
@@ -48,12 +49,19 @@ function App() {
         >
           Ski run
         </button>
+        <button
+          className={`tab ${activeGame === 'lumberjack' ? 'active' : ''}`}
+          onClick={() => setActiveGame('lumberjack')}
+        >
+          Ice Lumberjack
+        </button>
       </div>
 
       <div className="canvas-wrapper">
         {activeGame === 'flappy' && <FlappyGame onSendScore={sendScore} />}
         {activeGame === 'osu' && <OsuGame onSendScore={sendScore} />}
         {activeGame === 'ski' && <SkiRunGame onSendScore={sendScore} />}
+        {activeGame === 'lumberjack' && <LumberjackGame onSendScore={sendScore} />}
       </div>
     </div>
   )
