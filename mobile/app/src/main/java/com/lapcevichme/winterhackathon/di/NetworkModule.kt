@@ -1,6 +1,8 @@
 package com.lapcevichme.winterhackathon.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.lapcevichme.winterhackathon.core.network.AuthAuthenticator
+import com.lapcevichme.winterhackathon.core.network.AuthInterceptor
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
 import com.lapcevichme.winterhackathon.data.remote.GameApi
 import com.lapcevichme.winterhackathon.data.remote.LeaderboardApi
@@ -11,18 +13,35 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://winterhac-blabka.amvera.io/"
+    private const val BASE_URL = "https://winter-hack.fly.dev/api/"
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        authAuthenticator: AuthAuthenticator
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .authenticator(authAuthenticator)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         val json = Json {
             ignoreUnknownKeys = true
             coerceInputValues = true
@@ -32,6 +51,7 @@ object NetworkModule {
 
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }

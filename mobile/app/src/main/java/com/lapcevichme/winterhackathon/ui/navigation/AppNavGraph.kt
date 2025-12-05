@@ -51,7 +51,14 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val teamId = backStackEntry.arguments?.getString("teamId")
 
-            LoginScreen(navController, preselectedTeamId = teamId)
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                preselectedTeamId = teamId
+            )
         }
 
         composable(Screen.Home.route) { MainScreen(navController) }

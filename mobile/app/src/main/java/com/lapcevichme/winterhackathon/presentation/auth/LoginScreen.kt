@@ -30,8 +30,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation.NavController
-import com.lapcevichme.winterhackathon.ui.navigation.Screen
 
 data class Department(val id: String, val name: String, val emoji: String)
 
@@ -45,26 +43,27 @@ val departments = listOf(
 
 @Composable
 fun LoginScreen(
-    navController: NavController,
+    onLoginSuccess: () -> Unit, // Callback вместо NavController
     preselectedTeamId: String? = null,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    var nickname by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // State
     var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    // Эти поля нужны только для регистрации
+    var username by remember { mutableStateOf("") }
     var realName by remember { mutableStateOf("") }
 
     var isPasswordVisible by remember { mutableStateOf(false) }
     var selectedTeamId by remember(preselectedTeamId) { mutableStateOf(preselectedTeamId) }
 
+    // Реагируем на успех, вызывая внешний колбэк
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
+            onLoginSuccess()
         }
     }
 
@@ -104,11 +103,13 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // 1. EMAIL - Теперь главное поле
         OutlinedTextField(
-            value = nickname,
-            onValueChange = { nickname = it },
-            label = { Text("Логин (Username)") },
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -119,6 +120,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 2. PASSWORD - Второе главное поле
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -142,6 +144,7 @@ fun LoginScreen(
             )
         )
 
+        // Блок регистрации (скрывается при входе)
         AnimatedVisibility(
             visible = !uiState.isLoginMode,
             enter = expandVertically() + fadeIn(),
@@ -150,13 +153,12 @@ fun LoginScreen(
             Column {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Email
+                // Username (Никнейм)
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username (Никнейм)") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -167,7 +169,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Display Name
+                // Display Name (Для красоты пока что)
                 OutlinedTextField(
                     value = realName,
                     onValueChange = { realName = it },
@@ -224,7 +226,7 @@ fun LoginScreen(
         Button(
             onClick = {
                 viewModel.submit(
-                    nickname = nickname,
+                    username = username,
                     password = password,
                     email = email,
                     displayName = realName,
@@ -232,9 +234,9 @@ fun LoginScreen(
                 )
             },
             enabled = !uiState.isLoading &&
-                    nickname.isNotBlank() &&
+                    email.isNotBlank() &&
                     password.isNotBlank() &&
-                    (uiState.isLoginMode || (email.isNotBlank() && realName.isNotBlank() && selectedTeamId != null)),
+                    (uiState.isLoginMode || (username.isNotBlank())), // Для регистрации обязателен еще и username
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -267,9 +269,6 @@ fun DepartmentItem(
 ) {
     val bgColor =
         if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-
-    val borderColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
 
     Row(
         modifier = Modifier

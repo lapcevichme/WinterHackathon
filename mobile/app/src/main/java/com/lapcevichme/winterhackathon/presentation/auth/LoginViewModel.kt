@@ -25,7 +25,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun submit(
-        nickname: String,
+        username: String,
         password: String,
         email: String,
         displayName: String,
@@ -33,18 +33,15 @@ class LoginViewModel @Inject constructor(
     ) {
         val isLogin = _uiState.value.isLoginMode
 
-        if (nickname.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(error = "Заполните Логин и Пароль") }
+        if (email.isBlank() || password.isBlank()) {
+            _uiState.update { it.copy(error = "Email и пароль обязательны") }
             return
         }
 
         if (!isLogin) {
-            if (email.isBlank() || displayName.isBlank()) {
-                _uiState.update { it.copy(error = "Заполните Email и Имя") }
-                return
-            }
-            if (departmentId == null) {
-                _uiState.update { it.copy(error = "Выберите свой клан (отдел)") }
+            // Для регистрации нужен еще username (как минимум)
+            if (username.isBlank()) {
+                _uiState.update { it.copy(error = "Укажите Username") }
                 return
             }
         }
@@ -53,13 +50,13 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val result = if (isLogin) {
-                authRepository.login(username = nickname, password = password)
+                authRepository.login(email = email, password = password)
             } else {
                 val request = RegisterRequest(
-                    username = nickname,
-                    password = password,
                     email = email,
-                    displayName = displayName
+                    password = password,
+                    username = username
+                    // displayName и departmentId
                 )
                 authRepository.register(request)
             }

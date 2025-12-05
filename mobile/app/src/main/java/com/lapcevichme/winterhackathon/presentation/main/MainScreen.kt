@@ -48,7 +48,7 @@ import com.lapcevichme.winterhackathon.domain.model.main.DailyQuest
 @Composable
 fun MainScreen(
     navController: NavController,
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainScreenViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -66,7 +66,6 @@ fun MainScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            // Используем градиент из темы
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -85,7 +84,6 @@ fun MainScreen(
         } else if (uiState.data != null) {
             val data = uiState.data!!
 
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -120,7 +118,6 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Play Button
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -156,7 +153,6 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Daily quests
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth()

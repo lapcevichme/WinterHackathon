@@ -2,6 +2,7 @@ package com.lapcevichme.winterhackathon.data.repository.impl
 
 import com.lapcevichme.winterhackathon.core.manager.TokenManager
 import com.lapcevichme.winterhackathon.data.remote.AuthApiService
+import com.lapcevichme.winterhackathon.data.remote.LoginRequest
 import com.lapcevichme.winterhackathon.data.remote.RegisterRequest
 import com.lapcevichme.winterhackathon.data.remote.ValidationErrorResponse
 import com.lapcevichme.winterhackathon.domain.repository.AuthRepository
@@ -16,10 +17,11 @@ class AuthRepositoryImpl @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun login(username: String, password: String): Result<Unit> {
+    override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
-            val tokens = api.login(username = username, password = password)
-            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken)
+            val request = LoginRequest(email = email, password = password)
+            val tokens = api.login(request)
+            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken ?: "")
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -30,7 +32,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun register(request: RegisterRequest): Result<Unit> {
         return try {
             val tokens = api.register(request)
-            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken)
+            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken ?: "")
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()

@@ -11,19 +11,18 @@ class AuthInterceptor @Inject constructor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val builder = originalRequest.newBuilder()
 
+        if (originalRequest.header("Authorization") != null) {
+            return chain.proceed(originalRequest)
+        }
+
+        val builder = originalRequest.newBuilder()
         val token = tokenManager.getAccessToken()
+
         if (!token.isNullOrBlank()) {
             builder.addHeader("Authorization", "Bearer $token")
         }
 
-        val response = chain.proceed(builder.build())
-
-        if (response.code == 401) {
-            // TODO: Реализовать логику рефреша токена или выхода
-        }
-
-        return response
+        return chain.proceed(builder.build())
     }
 }
