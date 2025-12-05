@@ -3,7 +3,7 @@ from typing import Sequence
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .gameplay import Prize, InventoryItem, TokenQR, GameSession, Team
+from .gameplay import Prize, InventoryItem, TokenQR, GameSession, Team, LaunchCode
 
 
 class PrizesInterface:
@@ -89,3 +89,16 @@ class TeamsInterface:
 
     async def get(self, team_id: UUID) -> Team | None:
         return await self.session.get(Team, team_id)
+
+
+class LaunchCodeInterface:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def add(self, launch_code: LaunchCode) -> LaunchCode:
+        self.session.add(launch_code)
+        await self.session.flush()
+        return launch_code
+
+    async def get_by_code(self, code: str) -> LaunchCode | None:
+        return await self.session.scalar(select(LaunchCode).where(LaunchCode.code == code))

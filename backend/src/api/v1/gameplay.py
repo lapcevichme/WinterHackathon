@@ -10,6 +10,7 @@ from service.gameplay import (
     get_profile_service,
     get_leaderboard_service,
     get_admin_service,
+    get_launch_service,
 )
 from domain.gameplay import (
     ProfilePatch,
@@ -32,6 +33,16 @@ from domain.gameplay import (
 
 def get_gameplay_router() -> APIRouter:
     router = APIRouter(prefix="", tags=["Gameplay"])
+
+    @router.post("/games/{game_id}/launch")
+    async def launch_game(
+        game_id: str,
+        user: Annotated[User, Depends(auth_user)],
+        launch_svc=Depends(get_launch_service),
+    ):
+        code, session_id = await launch_svc.create_launch(user, game_id)
+        launch_url = f"{settings.GAME_URL}?sid={session_id}#code={code}"
+        return {"launch_url": launch_url, "session_id": session_id}
 
     # Profile
     @router.get("/profile/me", response_model=ProfileResponse)

@@ -8,11 +8,14 @@ from database.relational_db import (
     InventoryInterface,
     TokenQRInterface,
     TeamsInterface,
+    LaunchCodeInterface,
+    GameSessionInterface,
 )
 from .casino_service import CasinoService
 from .profile_service import ProfileService
 from .leaderboard_service import LeaderboardService
 from .admin_service import AdminService
+from .launch_service import LaunchService
 
 
 async def get_casino_service(uow: Annotated[UoW, Depends(get_uow)]) -> CasinoService:
@@ -39,3 +42,9 @@ async def get_admin_service(uow: Annotated[UoW, Depends(get_uow)]) -> AdminServi
     inventory_repo = InventoryInterface(uow.session)
     token_repo = TokenQRInterface(uow.session)
     return AdminService(uow, token_repo, inventory_repo, prizes_repo)
+
+
+async def get_launch_service(uow: Annotated[UoW, Depends(get_uow)]) -> LaunchService:
+    launch_repo = LaunchCodeInterface(uow.session)
+    session_repo = GameSessionInterface(uow.session)
+    return LaunchService(uow, launch_repo, session_repo)

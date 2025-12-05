@@ -148,7 +148,7 @@ class ProfileService:
         from database.relational_db import GameSessionInterface, GameSession  # local import to avoid cycle
 
         session_repo = GameSessionInterface(self.uow.session)
-        session_obj = GameSession(user_id=db_user.id, energy_cost=settings.GAME_ENERGY_COST)
+        session_obj = GameSession(user_id=db_user.id, game_id="default", energy_cost=settings.GAME_ENERGY_COST)
         await session_repo.add(session_obj)
         await self.uow.commit()
         return GameStartResponse(session_id=session_obj.id, energy_left=db_user.energy)
