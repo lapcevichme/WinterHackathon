@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     
     # Media settings
     MEDIA_DIR: str = 'media'
-    MAX_PHOTO_SIZE: int # in MB
+    MAX_PHOTO_SIZE: int = 5 # in MB
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str

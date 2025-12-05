@@ -1,6 +1,4 @@
-from typing import Annotated
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, HttpUrl, constr
-from datetime import date
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from uuid import UUID
 
 from domain.common import TimestampModel
@@ -13,12 +11,15 @@ class UserModel(TimestampModel):
     id: UUID = Field(...)
     email: EmailStr = Field(..., description="User e-mail")
     
-    username: str | None = Field(None, description="User's display name")
-    profile_pic_url: HttpUrl | None = Field(None)
-    bio: str | None = Field(None)
-    language_code: Annotated[str, constr(min_length=2, max_length=2)] | None = Field(None)
-    
-    is_onboarded: bool
+    username: str | None = Field(None, description="User's username")
+    display_name: str | None = Field(None, description="Public display name")
+    profile_pic_url: str | None = Field(None)
+    max_score: int = Field(0)
+    score: int = Field(0)
+    level: int = Field(0)
+    amount: int = Field(0)
+    energy: int = Field(0)
+    role: str = Field("player")
     banned: bool
     
     # TODO: Make this field returned only when ?expand=roles
@@ -31,11 +32,9 @@ class UserModel(TimestampModel):
 
 
 class UserPatch(BaseModel):
-    username: str | None = Field(None, description="User's display name")
+    username: str | None = Field(None, description="User's username")
+    display_name: str | None = Field(None, description="Public display name")
     profile_pic_url: str | None = Field(None)
-    bio: str | None = Field(None)
-    birth_date: date | None = Field(None)
-    language_code: Annotated[str, constr(min_length=2, max_length=2)] | None = Field(None)
 
 
 class UserRolesUpdate(BaseModel):

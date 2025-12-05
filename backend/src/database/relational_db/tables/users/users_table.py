@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
-from datetime import date, datetime
+from datetime import datetime
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import ForeignKey, Uuid, String, Boolean, DateTime, Text, Index, Integer, Date
+from sqlalchemy import Uuid, String, Boolean, DateTime, Text, Index, Integer
 
 from ..table_base import Base
 from ..mixins import TimestampMixin
@@ -13,19 +12,25 @@ class User(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), default=uuid4, primary_key=True)
     
     # Credentials
-    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # Profile info
-    username: Mapped[str | None] = mapped_column(String, nullable=True)
-    profile_pic_url: Mapped[str | None] = mapped_column(String, nullable=True)
-    bio: Mapped[str | None] = mapped_column(String, nullable=True)
-    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    username: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
+    display_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    profile_pic_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
+    # Game progression (from legacy schema)
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    level: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    energy: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="player")
     
     # Service
-    is_onboarded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    banned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    banned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     auth_version: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, server_default="1"
     )
