@@ -49,7 +49,13 @@ fun AppNavGraph(
         composable(Screen.Home.route) { MainScreen(navController) }
         composable(Screen.Leaderboard.route) { LeaderboardScreen() }
         composable(Screen.Casino.route) { CasinoScreenRoot() }
-        composable(Screen.Profile.route) { ProfileScreen() }
+        composable(Screen.Profile.route) {
+            ProfileScreen(onLogout = {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            })
+        }
         composable(Screen.Game.route) { GameScreen(onCloseGame = { navController.popBackStack() }) }
     }
 }

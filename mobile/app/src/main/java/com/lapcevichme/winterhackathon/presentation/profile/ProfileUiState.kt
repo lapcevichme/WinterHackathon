@@ -7,8 +7,8 @@ data class ProfileUiState(
     val isLoading: Boolean = false,
     val profile: UserProfile? = null,
     val error: String? = null,
-
     val isRedeemLoading: Boolean = false,
     val selectedPrize: Prize? = null,
-    val redeemToken: String? = null
+    val redeemToken: String? = null,
+    val isLoggedOut: Boolean = false
 )

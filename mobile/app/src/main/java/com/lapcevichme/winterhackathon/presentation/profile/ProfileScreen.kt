@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -65,12 +66,23 @@ import com.lapcevichme.winterhackathon.domain.model.casino.Prize
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.toColorInt
+import coil3.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    onLogout: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            onLogout()
+            viewModel.consumeLogoutEvent()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -103,7 +115,7 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ProfileAvatar(profile)
+                ProfileAvatar(avatarUrl = profile.avatarUrl)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,7 +123,8 @@ fun ProfileScreen(
                     text = profile.displayName,
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = profile.username,
@@ -136,25 +149,36 @@ fun ProfileScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = { /* TODO: Logout */ },
+                    onClick = { viewModel.logout() },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
-                        contentColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Выйти из аккаунта")
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         } else if (uiState.error != null) {
-            Text(
-                text = uiState.error ?: "Ошибка",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = uiState.error ?: "Неизвестная ошибка",
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = { viewModel.refresh() }) {
+                    Text("Попробовать снова")
+                }
+            }
         }
 
         if (uiState.selectedPrize != null) {
@@ -165,6 +189,161 @@ fun ProfileScreen(
                 onDismiss = { viewModel.onDismissRedeemDialog() }
             )
         }
+    }
+}
+
+
+@Composable
+fun ProfileAvatar(avatarUrl: String?) {
+    Box(
+        modifier = Modifier
+            .size(120.dp)
+            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+            .padding(4.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (avatarUrl != null) {
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = "Avatar",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                Icons.Filled.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(60.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun DepartmentBadge(department: String) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        shape = RoundedCornerShape(50)
+    ) {
+        Text(
+            text = department,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun LevelProgress(profile: UserProfile) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Уровень ${profile.level}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("${profile.xp} / ${profile.maxXp} XP", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), style = MaterialTheme.typography.bodyMedium)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { profile.xp.toFloat() / profile.maxXp.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun InventorySection(
+    loot: List<Prize>,
+    onItemClick: (Prize) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "МОЙ ЛУТ (${loot.size})",
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (loot.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Инвентарь пуст... пока что ❄️", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+            }
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                loot.forEach { item ->
+                    LootItemView(item, onClick = { onItemClick(item) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LootItemView(
+    item: Prize,
+    onClick: () -> Unit
+) {
+    val itemColor = item.colorHex.toColor()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(80.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .background(itemColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                .border(1.dp, itemColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(item.emoji, fontSize = 32.sp)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = item.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 12.sp
+        )
+    }
+}
+
+fun String.toColor(): Color {
+    return try {
+        Color(this.toColorInt())
+    } catch (e: Exception) {
+        Color.Gray
     }
 }
 
@@ -216,6 +395,12 @@ fun RedeemDialog(
                     textAlign = TextAlign.Center
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(modifier = Modifier
+                    .size(width = 40.dp, height = 4.dp)
+                    .background(prize.colorHex.toColor(), CircleShape)
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // QR Code
@@ -249,7 +434,7 @@ fun RedeemDialog(
                             )
                         }
                     } else {
-                        Text("Ошибка генерации", color = MaterialTheme.colorScheme.error)
+                        Text("Ошибка генерации", color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                     }
                 }
 
@@ -317,140 +502,11 @@ fun generateQrBitmap(content: String, sizePx: Int): Bitmap? {
             }
         }
 
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(w, h)
         bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
         bitmap
     } catch (e: Exception) {
         e.printStackTrace()
         null
-    }
-}
-
-@Composable
-fun ProfileAvatar(profile: UserProfile) {
-    Box(
-        modifier = Modifier
-            .size(120.dp)
-            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-            .padding(4.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            Icons.Filled.Person,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(60.dp)
-        )
-    }
-}
-
-@Composable
-fun DepartmentBadge(department: String) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(50)
-    ) {
-        Text(
-            text = department,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-fun LevelProgress(profile: UserProfile) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Уровень ${profile.level}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                Text("${profile.xp} / ${profile.maxXp} XP", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), style = MaterialTheme.typography.bodyMedium)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { profile.xp.toFloat() / profile.maxXp.toFloat() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun InventorySection(
-    loot: List<Prize>,
-    onItemClick: (Prize) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            "МОЙ ЛУТ (${loot.size})",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (loot.isEmpty()) {
-            Text("Инвентарь пуст", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-        } else {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                loot.forEach { item ->
-                    LootItemView(item, onClick = { onItemClick(item) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun LootItemView(
-    item: Prize,
-    onClick: () -> Unit
-) {
-    val itemColor = item.color
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(80.dp)
-            .clickable(onClick = onClick)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(70.dp)
-                .background(itemColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-                .border(1.dp, itemColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(item.emoji, fontSize = 32.sp)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = item.name,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            fontSize = 10.sp,
-            textAlign = TextAlign.Center
-        )
     }
 }

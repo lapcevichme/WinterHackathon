@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lapcevichme.winterhackathon.domain.model.casino.Prize
 import com.lapcevichme.winterhackathon.domain.usecase.GenerateRedeemTokenUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.GetProfileUseCase
+import com.lapcevichme.winterhackathon.domain.usecase.LogoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +14,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getProfileUseCase: GetProfileUseCase,
-    private val generateRedeemTokenUseCase: GenerateRedeemTokenUseCase
+    private val generateRedeemTokenUseCase: GenerateRedeemTokenUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -91,5 +92,20 @@ class ProfileViewModel @Inject constructor(
                 isRedeemLoading = false
             )
         }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                logoutUseCase()
+                _uiState.update { it.copy(isLoggedOut = true) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoggedOut = true) }
+            }
+        }
+    }
+
+    fun consumeLogoutEvent() {
+        _uiState.update { it.copy(isLoggedOut = false) }
     }
 }
