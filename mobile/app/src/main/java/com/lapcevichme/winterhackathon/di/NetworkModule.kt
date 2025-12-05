@@ -7,8 +7,12 @@ import com.lapcevichme.winterhackathon.data.remote.AdminApiService
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
 import com.lapcevichme.winterhackathon.data.remote.GameApi
 import com.lapcevichme.winterhackathon.data.remote.LeaderboardApiService
+import com.lapcevichme.winterhackathon.data.remote.MainApiService
 import com.lapcevichme.winterhackathon.data.remote.ProfileApiService
+import com.lapcevichme.winterhackathon.data.remote.UserApiService
+import com.lapcevichme.winterhackathon.data.repository.impl.MainRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.UserRepositoryImpl
+import com.lapcevichme.winterhackathon.domain.repository.MainRepository
 import com.lapcevichme.winterhackathon.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -91,7 +95,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUserRepository(impl: UserRepositoryImpl): UserRepository {
-        return impl
+    fun provideUserApiService(retrofit: Retrofit): UserApiService {
+        return retrofit.create(UserApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMainApiService(retrofit: Retrofit): MainApiService {
+        return retrofit.create(MainApiService::class.java)
     }
 }

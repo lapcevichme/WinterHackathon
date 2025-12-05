@@ -1,11 +1,14 @@
 package com.lapcevichme.winterhackathon.di
 
+import com.lapcevichme.winterhackathon.data.remote.MainApiService
 import com.lapcevichme.winterhackathon.data.remote.UserApiService
 import com.lapcevichme.winterhackathon.data.repository.impl.AdminRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.CasinoRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.GameRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.LeaderboardRepositoryImpl
+import com.lapcevichme.winterhackathon.data.repository.impl.MainRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.ProfileRepositoryImpl
+import com.lapcevichme.winterhackathon.data.repository.impl.UserRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.mock.MockMainRepositoryImpl
 import com.lapcevichme.winterhackathon.domain.repository.AdminRepository
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
@@ -13,6 +16,7 @@ import com.lapcevichme.winterhackathon.domain.repository.GameRepository
 import com.lapcevichme.winterhackathon.domain.repository.LeaderboardRepository
 import com.lapcevichme.winterhackathon.domain.repository.MainRepository
 import com.lapcevichme.winterhackathon.domain.repository.ProfileRepository
+import com.lapcevichme.winterhackathon.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,7 +53,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMainRepository(impl: MockMainRepositoryImpl): MainRepository {
+    fun provideMainRepository(impl: MainRepositoryImpl): MainRepository {
         return impl
     }
 
@@ -61,7 +65,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUserApiService(retrofit: Retrofit): UserApiService {
-        return retrofit.create(UserApiService::class.java)
+    fun provideUserRepository(impl: UserRepositoryImpl): UserRepository {
+        return impl
     }
 }

@@ -44,14 +44,12 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!--                TODO Норм паттерн сделать-->
-                <!-- https://winterhack.com/join?team=it -->
-                <data
-                    android:host="winterhack.com"
-                    android:pathPrefix="/join"
-                    android:scheme="https" />
-            </intent-filter>
 
+                <data
+                    android:scheme="https"
+                    android:host="winter-hack.fly.dev"
+                    android:pathPrefix="/join" />
+            </intent-filter>
         </activity>
     </application>
 

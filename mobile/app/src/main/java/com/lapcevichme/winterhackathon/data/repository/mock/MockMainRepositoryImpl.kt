@@ -20,7 +20,11 @@ class MockMainRepositoryImpl @Inject constructor() : MainRepository {
                 winStreak = 3,
                 balance = 1250
             ),
-            activeGame = ActiveGame("Flappy Bird"),
+            activeGame = ActiveGame(
+                "Flappy Bird",
+                energyCost = 1,
+                isAvailable = true
+            ),
             quests = listOf(
                 DailyQuest("1", "Сыграть 3 матча", 1, 3, 50),
                 DailyQuest("2", "Победить HR отдел", 0, 1, 100),
