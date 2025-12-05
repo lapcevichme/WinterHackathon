@@ -16,17 +16,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.lapcevichme.winterhackathon.ui.navigation.Screen
 
 @Composable
-fun OnboardingScreen(navController: NavController) {
+fun OnboardingScreen(onStartClick: () -> Unit) {
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            Color(0xFF0F0F16)
         )
     )
 
@@ -66,12 +65,7 @@ fun OnboardingScreen(navController: NavController) {
         }
 
         Button(
-            onClick = {
-                // Переход на экран регистрации
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Onboarding.route) { inclusive = true }
-                }
-            },
+            onClick = onStartClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

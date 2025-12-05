@@ -27,7 +27,15 @@ fun AppNavGraph(
         startDestination = startDest,
         modifier = modifier
     ) {
-        composable(Screen.Onboarding.route) { OnboardingScreen(navController) }
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onStartClick = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
 
         composable(
             route = Screen.Login.route,

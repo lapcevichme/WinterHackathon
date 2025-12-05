@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,7 +55,15 @@ fun LeaderboardScreen(
 
     val isRefreshing = uiState.isLoading && uiState.leaderboard.isNotEmpty()
 
+    val backgroundBrush = Brush.verticalGradient(
+        listOf(
+            MaterialTheme.colorScheme.background,
+            Color(0xFF0F0F16)
+        )
+    )
+
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -71,59 +80,66 @@ fun LeaderboardScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(backgroundBrush)
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
         ) {
-            LeaderboardTabs(
-                selectedType = uiState.selectedType,
-                onTypeSelected = viewModel::onTypeChanged
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = { viewModel.refresh() },
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.isLoading && uiState.leaderboard.isEmpty()) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else if (uiState.error != null && uiState.leaderboard.isEmpty()) {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = uiState.error ?: "Произошла ошибка",
-                                color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LeaderboardTabs(
+                    selectedType = uiState.selectedType,
+                    onTypeSelected = viewModel::onTypeChanged
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (uiState.isLoading && uiState.leaderboard.isEmpty()) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { viewModel.refresh() }) {
-                                Text("Повторить")
+                        } else if (uiState.error != null && uiState.leaderboard.isEmpty()) {
+                            Column(
+                                modifier = Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = uiState.error ?: "Произошла ошибка",
+                                    color = MaterialTheme.colorScheme.error,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(onClick = { viewModel.refresh() }) {
+                                    Text("Повторить")
+                                }
                             }
-                        }
-                    } else if (uiState.leaderboard.isEmpty() && !uiState.isLoading) {
-                        Text(
-                            text = "Список пока пуст",
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(uiState.leaderboard) { entry ->
-                                LeaderboardItem(entry)
+                        } else if (uiState.leaderboard.isEmpty() && !uiState.isLoading) {
+                            Text(
+                                text = "Список пока пуст",
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(uiState.leaderboard) { entry ->
+                                    LeaderboardItem(entry)
+                                }
                             }
                         }
                     }
@@ -199,7 +215,7 @@ fun TabButton(
 fun LeaderboardItem(entry: LeaderboardEntry) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp),

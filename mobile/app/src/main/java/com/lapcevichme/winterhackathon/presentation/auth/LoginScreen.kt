@@ -22,6 +22,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -31,7 +33,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.lapcevichme.winterhackathon.ui.navigation.Screen
 
-// TODO команды/отделы с бэка получать (пока хардкод ок)
 data class Department(val id: String, val name: String, val emoji: String)
 
 val departments = listOf(
@@ -80,10 +81,17 @@ fun LoginScreen(
         }
     }
 
+    val backgroundBrush = Brush.verticalGradient(
+        listOf(
+            MaterialTheme.colorScheme.background,
+            Color(0xFF0F0F16)
+        )
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(backgroundBrush)
             .padding(24.dp)
     ) {
         Spacer(modifier = Modifier.height(32.dp))
@@ -243,7 +251,8 @@ fun LoginScreen(
             } else {
                 Text(
                     if (uiState.isLoginMode) "ВОЙТИ" else "ВСТУПИТЬ В БОЙ",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -257,7 +266,10 @@ fun DepartmentItem(
     onClick: () -> Unit
 ) {
     val bgColor =
-        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
+        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+
+    val borderColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
 
     Row(
         modifier = Modifier
