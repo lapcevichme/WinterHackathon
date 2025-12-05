@@ -27,8 +27,12 @@ class CasinoViewModel @Inject constructor(
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            val savedBalance = repository.getUserBalance()
-            uiState = uiState.copy(balance = savedBalance)
+            try {
+                val savedBalance = repository.getUserBalance()
+                uiState = uiState.copy(balance = savedBalance)
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = "Не удалось обновить баланс: ${e.message}")
+            }
         }
     }
 
@@ -64,12 +68,20 @@ class CasinoViewModel @Inject constructor(
 
         if (winner != null) {
             viewModelScope.launch {
-                val trueBalance = repository.getUserBalance()
-                uiState = uiState.copy(
-                    balance = trueBalance,
-                    lastWin = winner,
-                    isSpinning = false
-                )
+                try {
+                    val trueBalance = repository.getUserBalance()
+                    uiState = uiState.copy(
+                        balance = trueBalance,
+                        lastWin = winner,
+                        isSpinning = false
+                    )
+                } catch (e: Exception) {
+                    uiState = uiState.copy(
+                        lastWin = winner,
+                        isSpinning = false,
+                        error = "Сбой синхронизации баланса"
+                    )
+                }
             }
         }
     }
