@@ -3,10 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_limiter import FastAPILimiter
 from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 from api import get_api_routers
 from webhooks import get_webhooks
-from core.config import Settings, configure_logging
+from core.config import Settings, configure_logging, BASE_DIR
 from database.redis import get_redis
 # from scheduler import init_scheduler
 
@@ -32,6 +33,11 @@ app = FastAPI(
 
 # Mount static
 # app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
+app.mount(
+    '/.well-known',
+    StaticFiles(directory=Path(BASE_DIR, ".well-known"), check_dir=False),
+    name='well-known'
+)
 
 # Including routers
 app.include_router(get_api_routers())
