@@ -13,6 +13,7 @@ import com.lapcevichme.winterhackathon.presentation.leaderboard.LeaderboardScree
 import com.lapcevichme.winterhackathon.presentation.main.MainScreen
 import com.lapcevichme.winterhackathon.presentation.onboarding.OnboardingScreen
 import com.lapcevichme.winterhackathon.presentation.profile.ProfileScreen
+import com.lapcevichme.winterhackathon.presentation.admin.AdminScannerScreen
 
 @Composable
 fun AppNavGraph(
@@ -44,7 +45,6 @@ fun AppNavGraph(
                     uriPattern = "winterhack://join?team={teamId}"
                 },
                 navDeepLink {
-                    // TODO: норм паттерн
                     uriPattern = "https://winterhack.com/join?team={teamId}"
                 }
             )
@@ -63,6 +63,7 @@ fun AppNavGraph(
 
         composable(Screen.Home.route) { MainScreen(navController) }
         composable(Screen.Leaderboard.route) { LeaderboardScreen() }
+        composable(Screen.AdminScanner.route) { AdminScannerScreen() }
         composable(Screen.Casino.route) { CasinoScreenRoot() }
         composable(Screen.Profile.route) {
             ProfileScreen(onLogout = {
