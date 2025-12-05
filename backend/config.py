@@ -1,9 +1,21 @@
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
+import logging
 
-load_dotenv()
+from pathlib import Path
+from pydantic import SecretStr
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR  = Path(__file__).resolve().parent
 
 class Settings(BaseSettings):
+    """
+    Project dependencies config
+    """
+    model_config = SettingsConfigDict(
+        env_file=f'{BASE_DIR}/.env',
+        extra='ignore'
+    )
+    
     POSTGRES_HOST: str
     POSTGRES_DB: str
     POSTGRES_USER: str
@@ -15,11 +27,16 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     
-    class Config:
-        env_file = ".env"
-    
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-settings = Settings()
+    
+settings = Settings() # pyright: ignore[reportCallIssue]
+
+
+def configure_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s",
+    )
