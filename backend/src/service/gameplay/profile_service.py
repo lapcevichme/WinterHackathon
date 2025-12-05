@@ -9,7 +9,6 @@ from database.relational_db import (
     UoW,
     User,
     InventoryItem,
-    Prize,
     TeamsInterface,
     InventoryInterface,
     PrizesInterface,
@@ -26,6 +25,10 @@ from domain.gameplay import (
     GameScoreResponse,
     ItemStatus,
     PrizeType,
+    UserSummary,
+    EnergyState,
+    ActiveGame,
+    InventoryItem as InventoryItemSchema,
 )
 from service.gameplay.utils import refill_energy
 
@@ -72,16 +75,16 @@ class ProfileService:
             xp=db_user.score,
             max_xp=db_user.max_score,
             inventory=[
-                {
-                    "id": item.id,
-                    "prize_id": item.prize_id,
-                    "name": item.prize.name,
-                    "type": PrizeType(item.prize.type),
-                    "status": ItemStatus(item.status),
-                    "amount": item.prize.amount,
-                    "emoji": item.prize.emoji,
-                    "color_hex": item.prize.color_hex,
-                }
+                InventoryItemSchema(
+                    id=item.id,
+                    prize_id=item.prize_id,
+                    name=item.prize.name,
+                    type=PrizeType(item.prize.type),
+                    status=ItemStatus(item.status),
+                    amount=item.prize.amount,
+                    emoji=item.prize.emoji,
+                    color_hex=item.prize.color_hex,
+                )
                 for item in db_user.items
             ],
         )
@@ -109,24 +112,22 @@ class ProfileService:
             await self.uow.commit()
             await self.uow.session.refresh(db_user)
 
-        active_game = {
-            "name": "Snowball Fight",
-            "energy_cost": settings.GAME_ENERGY_COST,
-            "is_available": db_user.energy >= settings.GAME_ENERGY_COST,
-        }
-
         return MainResponse(
-            user_summary={
-                "id": db_user.id,
-                "display_name": db_user.display_name or db_user.username,
-                "balance": {"amount": db_user.amount, "currency_symbol": "❄️"},
-                "energy": {
-                    "current": db_user.energy,
-                    "max": 10,
-                    "next_refill_in_seconds": next_refill,
-                },
-            },
-            active_game=active_game,
+            user_summary=UserSummary(
+                id=db_user.id,
+                display_name=db_user.display_name or db_user.username,
+                balance=Balance(amount=db_user.amount, currency_symbol="❄️"),
+                energy=EnergyState(
+                    current=db_user.energy,
+                    max=10,
+                    next_refill_in_seconds=next_refill,
+                ),
+            ),
+            active_game=ActiveGame(
+                name="Snowball Fight",
+                energy_cost=settings.GAME_ENERGY_COST,
+                is_available=db_user.energy >= settings.GAME_ENERGY_COST,
+            ),
             quests=[],
         )
 

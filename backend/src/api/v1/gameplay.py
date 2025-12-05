@@ -12,6 +12,7 @@ from service.gameplay import (
     get_leaderboard_service,
     get_admin_service,
     get_launch_service,
+    LaunchService,
 )
 from domain.gameplay import (
     ProfilePatch,
@@ -39,7 +40,7 @@ def get_gameplay_router() -> APIRouter:
     async def launch_game(
         game_id: str,
         user: Annotated[User, Depends(auth_user)],
-        launch_svc=Depends(get_launch_service),
+        launch_svc: Annotated[LaunchService, Depends(get_launch_service)],
     ):
         code, session_id = await launch_svc.create_launch(user, game_id)
         launch_url = f"{settings.GAME_URL}?sid={session_id}#code={code}"

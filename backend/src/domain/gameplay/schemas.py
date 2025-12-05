@@ -56,10 +56,39 @@ class RedeemTokenResponse(BaseModel):
     expires_in_seconds: int = 300
 
 
+class EnergyState(BaseModel):
+    current: int
+    max: int
+    next_refill_in_seconds: int
+
+
+class UserSummary(BaseModel):
+    id: UUID
+    display_name: str | None
+    balance: Balance
+    energy: EnergyState
+
+
+class ActiveGame(BaseModel):
+    name: str
+    energy_cost: int
+    is_available: bool
+
+
+class QuestInfo(BaseModel):
+    id: UUID | str
+    title: str
+    progress: int
+    max_progress: int
+    reward: Balance
+    is_completed: bool
+    is_claimed: bool
+
+
 class MainResponse(BaseModel):
-    user_summary: dict
-    active_game: dict
-    quests: list = Field(default_factory=list)
+    user_summary: UserSummary
+    active_game: ActiveGame
+    quests: list[QuestInfo] = Field(default_factory=list)
 
 
 class BetRequest(BaseModel):
