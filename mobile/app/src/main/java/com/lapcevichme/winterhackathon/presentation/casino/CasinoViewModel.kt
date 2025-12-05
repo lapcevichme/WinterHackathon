@@ -28,8 +28,11 @@ class CasinoViewModel @Inject constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             try {
-                val savedBalance = repository.getUserBalance()
-                uiState = uiState.copy(balance = savedBalance)
+                val userBalance = repository.getUserBalance()
+                uiState = uiState.copy(
+                    balance = userBalance.amount,
+                    currencySymbol = userBalance.currencySymbol
+                )
             } catch (e: Exception) {
                 uiState = uiState.copy(error = "Не удалось обновить баланс: ${e.message}")
             }
@@ -69,9 +72,10 @@ class CasinoViewModel @Inject constructor(
         if (winner != null) {
             viewModelScope.launch {
                 try {
-                    val trueBalance = repository.getUserBalance()
+                    val userBalance = repository.getUserBalance()
                     uiState = uiState.copy(
-                        balance = trueBalance,
+                        balance = userBalance.amount,
+                        currencySymbol = userBalance.currencySymbol,
                         lastWin = winner,
                         isSpinning = false
                     )

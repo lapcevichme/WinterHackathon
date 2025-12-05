@@ -1,29 +1,18 @@
 package com.lapcevichme.winterhackathon.data.mapper
 
-import com.lapcevichme.winterhackathon.data.remote.TeamLeaderboardEntryDto
-import com.lapcevichme.winterhackathon.data.remote.UserLeaderboardEntryDto
+import com.lapcevichme.winterhackathon.data.remote.LeaderboardEntryDto
 import com.lapcevichme.winterhackathon.domain.model.leaderboard.LeaderboardEntry
 import com.lapcevichme.winterhackathon.domain.model.leaderboard.Trend
 
-
-fun TeamLeaderboardEntryDto.toDomain(rank: Int): LeaderboardEntry {
+fun LeaderboardEntryDto.toDomain(): LeaderboardEntry {
     return LeaderboardEntry(
-        id = this.username,
         rank = rank,
-        name = this.username,
-        score = this.maxScore,
-        subLabel = "Баланс: ${this.amount}",
-        trend = Trend.STABLE
-    )
-}
-
-fun UserLeaderboardEntryDto.toDomain(rank: Int): LeaderboardEntry {
-    return LeaderboardEntry(
-        id = this.id ?: this.username,
-        rank = rank,
-        name = this.username,
-        score = this.maxScore ?: 0,
-        subLabel = this.department ?: "Игрок",
-        trend = Trend.STABLE
+        name = name,
+        score = score,
+        trend = try {
+            Trend.valueOf(trend.uppercase())
+        } catch (e: Exception) {
+            Trend.SAME
+        }
     )
 }

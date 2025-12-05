@@ -259,11 +259,6 @@ fun LeaderboardItem(entry: LeaderboardEntry) {
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Text(
-                    text = entry.subLabel,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
 
             Column(horizontalAlignment = Alignment.End) {

@@ -7,10 +7,10 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface GameApi {
-    @GET("/v1/game/start")
+    @GET("game/start")
     suspend fun startGame(): GameStartResponseDto
 
-    @POST("/v1/game/result")
+    @POST("game/result")
     suspend fun sendGameResult(@Body body: GameResultRequestDto)
 }
 

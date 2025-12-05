@@ -1,6 +1,6 @@
 package com.lapcevichme.winterhackathon.presentation.profile
 
-import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 
 data class ProfileUiState(
@@ -8,7 +8,7 @@ data class ProfileUiState(
     val profile: UserProfile? = null,
     val error: String? = null,
     val isRedeemLoading: Boolean = false,
-    val selectedPrize: Prize? = null,
+    val selectedItem: InventoryItem? = null,
     val redeemToken: String? = null,
     val isLoggedOut: Boolean = false
 )

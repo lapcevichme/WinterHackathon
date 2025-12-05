@@ -8,24 +8,24 @@ import retrofit2.http.POST
 
 interface AuthApiService {
 
-    @POST("v1/auth/login")
+    @POST("auth/login")
     suspend fun login(
         @Body request: LoginRequest,
         @Header("X-Client") client: String = "mobile"
     ): TokenDto
 
-    @POST("v1/auth/register")
+    @POST("auth/register")
     suspend fun register(
         @Body request: RegisterRequest,
         @Header("X-Client") client: String = "mobile"
     ): TokenDto
 
-    @POST("v1/auth/refresh")
+    @POST("auth/refresh")
     suspend fun refresh(
         @Header("Authorization") refreshToken: String
     ): TokenDto
 
-    @POST("v1/auth/logout")
+    @POST("auth/logout")
     suspend fun logout(): Any
 }
 

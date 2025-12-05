@@ -2,7 +2,7 @@ package com.lapcevichme.winterhackathon.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
 import com.lapcevichme.winterhackathon.domain.usecase.GenerateRedeemTokenUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.GetProfileUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.LogoutUseCase
@@ -54,18 +54,18 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onRedeemItemClicked(prize: Prize) {
+    fun onRedeemItemClicked(item: InventoryItem) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    selectedPrize = prize,
+                    selectedItem = item,
                     isRedeemLoading = true,
                     redeemToken = null
                 )
             }
 
             try {
-                val token = generateRedeemTokenUseCase(prize.id)
+                val token = generateRedeemTokenUseCase(item.id)
                 _uiState.update {
                     it.copy(
                         isRedeemLoading = false,
@@ -76,7 +76,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isRedeemLoading = false,
-                        selectedPrize = null,
+                        selectedItem = null,
                         error = "Ошибка генерации QR: ${e.message}"
                     )
                 }
@@ -87,7 +87,7 @@ class ProfileViewModel @Inject constructor(
     fun onDismissRedeemDialog() {
         _uiState.update {
             it.copy(
-                selectedPrize = null,
+                selectedItem = null,
                 redeemToken = null,
                 isRedeemLoading = false
             )

@@ -1,7 +1,9 @@
 package com.lapcevichme.winterhackathon.data.mapper
 
+import com.lapcevichme.winterhackathon.data.remote.BalanceResponse
 import com.lapcevichme.winterhackathon.data.remote.PrizeDto
 import com.lapcevichme.winterhackathon.data.remote.SpinResponseDto
+import com.lapcevichme.winterhackathon.domain.model.casino.Balance
 import com.lapcevichme.winterhackathon.domain.model.casino.Prize
 import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
 import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
@@ -9,7 +11,14 @@ import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
 fun SpinResponseDto.toDomain(): SpinResponse {
     return SpinResponse(
         winner = winner.toDomain(),
-        newBalance = newBalance
+        newBalance = newBalance.toDomain()
+    )
+}
+
+fun BalanceResponse.toDomain(): Balance {
+    return Balance(
+        amount = amount,
+        currencySymbol = currencySymbol
     )
 }
 

@@ -25,9 +25,9 @@ interface ProfileApiService {
 @Serializable
 data class UserProfileDto(
     @SerialName("id") val id: String,
-    @SerialName("username") val username: String,
-    @SerialName("display_name") val displayName: String,
-    @SerialName("department") val department: String,
+    @SerialName("username") val username: String?,
+    @SerialName("display_name") val displayName: String?,
+    @SerialName("department") val department: String?,
     @SerialName("avatar_url") val avatarUrl: String? = null,
     @SerialName("level") val level: Int,
     @SerialName("xp") val xp: Int,

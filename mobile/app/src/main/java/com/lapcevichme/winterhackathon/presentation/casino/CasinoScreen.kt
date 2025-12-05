@@ -137,7 +137,7 @@ fun CasinoScreen(
             ) {
                 Box(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Баланс: ${state.balance} 🪙",
+                        text = "Баланс: ${state.balance} ${state.currencySymbol}",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -277,7 +277,7 @@ fun CasinoScreen(
                     .height(60.dp)
             ) {
                 Text(
-                    text = if (state.isSpinning) "Крутим..." else "Крутить (10 🪙)",
+                    text = if (state.isSpinning) "Крутим..." else "Крутить (10 ${state.currencySymbol})",
                     style = MaterialTheme.typography.titleMedium
                 )
             }

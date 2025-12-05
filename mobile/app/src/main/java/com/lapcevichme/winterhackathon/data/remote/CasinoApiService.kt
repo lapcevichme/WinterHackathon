@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface CasinoApiService {
-    @GET("user/balance")
+    @GET("profile/balance")
     suspend fun getUserBalance(): BalanceResponse
 
     @POST("casino/spin")
@@ -16,8 +16,10 @@ interface CasinoApiService {
 
 @Serializable
 data class BalanceResponse(
-    @SerialName("balance")
-    val balance: Int
+    @SerialName("amount")
+    val amount: Int,
+    @SerialName("currency_symbol")
+    val currencySymbol: String
 )
 
 @Serializable
@@ -32,7 +34,7 @@ data class SpinResponseDto(
     val winner: PrizeDto,
 
     @SerialName("new_balance")
-    val newBalance: Int
+    val newBalance: BalanceResponse
 )
 
 @Serializable

@@ -5,6 +5,7 @@ import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
 import com.lapcevichme.winterhackathon.data.remote.SpinRequest
 import com.lapcevichme.winterhackathon.data.remote.ValidationErrorResponse
 import com.lapcevichme.winterhackathon.domain.model.casino.SpinResponse
+import com.lapcevichme.winterhackathon.domain.model.casino.Balance
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -16,9 +17,13 @@ class CasinoRepositoryImpl @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun getUserBalance(): Int {
+    override suspend fun getUserBalance(): Balance {
         return try {
-            api.getUserBalance().balance
+            val response = api.getUserBalance()
+            Balance(
+                amount = response.amount,
+                currencySymbol = response.currencySymbol
+            )
         } catch (e: Exception) {
             throw handleException(e)
         }

@@ -146,7 +146,7 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                "Сейчас в ротации: ${data.activeGameName}",
+                "Сейчас в ротации: ${data.activeGame.name}",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodyMedium
             )

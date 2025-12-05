@@ -21,7 +21,7 @@ class SpinRouletteUseCase @Inject constructor(
                     itemsChain = items,
                     winningIndex = CasinoConfig.WINNING_INDEX,
                     winPrize = response.winner,
-                    newBalance = response.newBalance
+                    newBalance = response.newBalance.amount
                 )
             )
         } catch (e: Exception) {

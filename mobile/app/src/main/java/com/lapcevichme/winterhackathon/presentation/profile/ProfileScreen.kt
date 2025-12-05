@@ -63,7 +63,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
-import com.lapcevichme.winterhackathon.domain.model.casino.Prize
+import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -128,21 +128,21 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = profile.displayName,
+                    text = profile.displayName ?: "Имя не указано",
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = profile.username,
+                    text = profile.username ?: "",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     style = MaterialTheme.typography.bodyLarge
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                DepartmentBadge(profile.department)
+                DepartmentBadge(profile.department ?: "Отдел не указан")
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -152,8 +152,8 @@ fun ProfileScreen(
 
                 InventorySection(
                     loot = profile.inventory,
-                    onItemClick = { prize ->
-                        viewModel.onRedeemItemClicked(prize)
+                    onItemClick = { item ->
+                        viewModel.onRedeemItemClicked(item)
                     }
                 )
 
@@ -189,9 +189,9 @@ fun ProfileScreen(
             }
         }
 
-        if (uiState.selectedPrize != null) {
+        if (uiState.selectedItem != null) {
             RedeemDialog(
-                prize = uiState.selectedPrize!!,
+                prize = uiState.selectedItem!!,
                 token = uiState.redeemToken,
                 isLoading = uiState.isRedeemLoading,
                 onDismiss = { viewModel.onDismissRedeemDialog() }
@@ -277,8 +277,8 @@ fun LevelProgress(profile: UserProfile) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun InventorySection(
-    loot: List<Prize>,
-    onItemClick: (Prize) -> Unit
+    loot: List<InventoryItem>,
+    onItemClick: (InventoryItem) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -314,7 +314,7 @@ fun InventorySection(
 
 @Composable
 fun LootItemView(
-    item: Prize,
+    item: InventoryItem,
     onClick: () -> Unit
 ) {
     val itemColor = item.colorHex.toColor()
@@ -357,7 +357,7 @@ fun String.toColor(): Color {
 
 @Composable
 fun RedeemDialog(
-    prize: Prize,
+    prize: InventoryItem,
     token: String?,
     isLoading: Boolean,
     onDismiss: () -> Unit

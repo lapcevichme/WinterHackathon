@@ -1,8 +1,8 @@
 package com.lapcevichme.winterhackathon.data.repository.mock
 
 import com.lapcevichme.winterhackathon.core.config.CasinoConfig
-import com.lapcevichme.winterhackathon.domain.model.casino.Prize
-import com.lapcevichme.winterhackathon.domain.model.casino.PrizeType
+import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
+import com.lapcevichme.winterhackathon.domain.model.profile.ItemStatus
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 import com.lapcevichme.winterhackathon.domain.repository.ProfileRepository
 import kotlinx.coroutines.delay
@@ -20,40 +20,55 @@ class MockProfileRepositoryImpl @Inject constructor() : ProfileRepository {
         xp = 75,
         maxXp = 100,
         inventory = listOf(
-            Prize(
+            InventoryItem(
                 id = "1",
+                prizeId = "1",
                 name = "Перчатки Стажера",
-                type = PrizeType.ITEM,
+                type = com.lapcevichme.winterhackathon.domain.model.casino.PrizeType.ITEM,
+                status = ItemStatus.AVAILABLE,
+                amount = 1,
                 emoji = "🧤",
-                colorHex = CasinoConfig.Colors.COMMON
+                colorHex = com.lapcevichme.winterhackathon.core.config.CasinoConfig.Colors.COMMON
             ),
-            Prize(
+            InventoryItem(
                 id = "2",
+                prizeId = "2",
                 name = "Легаси Код",
-                type = PrizeType.TRASH,
+                type = com.lapcevichme.winterhackathon.domain.model.casino.PrizeType.TRASH,
+                status = ItemStatus.AVAILABLE,
+                amount = 1,
                 emoji = "💩",
-                colorHex = CasinoConfig.Colors.COMMON
+                colorHex = com.lapcevichme.winterhackathon.core.config.CasinoConfig.Colors.COMMON
             ),
-            Prize(
+            InventoryItem(
                 id = "3",
+                prizeId = "3",
                 name = "Красный Дракон",
-                type = PrizeType.ITEM,
+                type = com.lapcevichme.winterhackathon.domain.model.casino.PrizeType.ITEM,
+                status = ItemStatus.AVAILABLE,
+                amount = 1,
                 emoji = "🐉",
-                colorHex = CasinoConfig.Colors.LEGENDARY
+                colorHex = com.lapcevichme.winterhackathon.core.config.CasinoConfig.Colors.LEGENDARY
             ),
-            Prize(
+            InventoryItem(
                 id = "4",
+                prizeId = "4",
                 name = "Макбук Про",
-                type = PrizeType.ITEM,
+                type = com.lapcevichme.winterhackathon.domain.model.casino.PrizeType.ITEM,
+                status = ItemStatus.AVAILABLE,
+                amount = 1,
                 emoji = "💻",
-                colorHex = CasinoConfig.Colors.RARE
+                colorHex = com.lapcevichme.winterhackathon.core.config.CasinoConfig.Colors.RARE
             ),
-            Prize(
+            InventoryItem(
                 id = "5",
+                prizeId = "5",
                 name = "Бесконечный Кофе",
-                type = PrizeType.ITEM,
+                type = com.lapcevichme.winterhackathon.domain.model.casino.PrizeType.ITEM,
+                status = ItemStatus.AVAILABLE,
+                amount = 1,
                 emoji = "☕",
-                colorHex = CasinoConfig.Colors.EPIC
+                colorHex = com.lapcevichme.winterhackathon.core.config.CasinoConfig.Colors.EPIC
             )
         )
     )

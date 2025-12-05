@@ -5,7 +5,7 @@ import com.lapcevichme.winterhackathon.core.network.AuthAuthenticator
 import com.lapcevichme.winterhackathon.core.network.AuthInterceptor
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
 import com.lapcevichme.winterhackathon.data.remote.GameApi
-import com.lapcevichme.winterhackathon.data.remote.LeaderboardApi
+import com.lapcevichme.winterhackathon.data.remote.LeaderboardApiService
 import com.lapcevichme.winterhackathon.data.remote.ProfileApiService
 import dagger.Module
 import dagger.Provides
@@ -22,7 +22,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://winter-hack.fly.dev/api/"
+    private const val BASE_URL = "https://winter-hack.fly.dev/api/v1/"
 
     @Provides
     @Singleton
@@ -70,8 +70,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideLeaderboardApi(retrofit: Retrofit): LeaderboardApi {
-        return retrofit.create(LeaderboardApi::class.java)
+    fun provideLeaderboardApi(retrofit: Retrofit): LeaderboardApiService {
+        return retrofit.create(LeaderboardApiService::class.java)
     }
 
     @Provides
