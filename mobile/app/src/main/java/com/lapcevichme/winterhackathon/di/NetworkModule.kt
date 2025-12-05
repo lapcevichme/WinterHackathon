@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "" // TODO IMPLEMENT BASE URL!!!
+    private const val BASE_URL = "https://winterhac-blabka.amvera.io/"
 
     @Provides
     @Singleton

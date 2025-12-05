@@ -1,0 +1,85 @@
+package com.lapcevichme.winterhackathon.data.repository.impl
+
+import com.lapcevichme.winterhackathon.core.manager.TokenManager
+import com.lapcevichme.winterhackathon.data.remote.AuthApiService
+import com.lapcevichme.winterhackathon.data.remote.RegisterRequest
+import com.lapcevichme.winterhackathon.data.remote.ValidationErrorResponse
+import com.lapcevichme.winterhackathon.domain.repository.AuthRepository
+import kotlinx.serialization.json.Json
+import retrofit2.HttpException
+import javax.inject.Inject
+
+class AuthRepositoryImpl @Inject constructor(
+    private val api: AuthApiService,
+    private val tokenManager: TokenManager
+) : AuthRepository {
+
+    private val json = Json { ignoreUnknownKeys = true }
+
+    override suspend fun login(username: String, password: String): Result<Unit> {
+        return try {
+            val tokens = api.login(username = username, password = password)
+            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(handleException(e))
+        }
+    }
+
+    override suspend fun register(request: RegisterRequest): Result<Unit> {
+        return try {
+            val tokens = api.register(request)
+            tokenManager.saveTokens(tokens.accessToken, tokens.refreshToken)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(handleException(e))
+        }
+    }
+
+    override suspend fun logout(): Result<Unit> {
+        return try {
+            try { api.logout() } catch (e: Exception) { e.printStackTrace() }
+            tokenManager.clearTokens()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun isUserLoggedIn(): Boolean {
+        return !tokenManager.getAccessToken().isNullOrBlank()
+    }
+
+    private fun handleException(e: Exception): Exception {
+        if (e is HttpException) {
+            when (e.code()) {
+                422 -> {
+                    try {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        if (errorBody != null) {
+                            val validationError = json.decodeFromString<ValidationErrorResponse>(errorBody)
+                            val errorMessage = validationError.detail?.joinToString("\n") {
+                                val field = it.loc.lastOrNull() ?: "Поле"
+                                "$field: ${it.msg}"
+                            }
+                            if (!errorMessage.isNullOrBlank()) {
+                                return Exception(errorMessage)
+                            }
+                        }
+                    } catch (parsingError: Exception) {
+                        parsingError.printStackTrace()
+                    }
+                }
+                in 500..599 -> {
+                    return Exception("Сервер приуныл (Ошибка ${e.code()}). Скажи бэкендеру чекнуть логи.")
+                }
+                else -> {
+                    return Exception("Ошибка сети: ${e.code()} ${e.message()}")
+                }
+            }
+        }
+        return e
+    }
+}
