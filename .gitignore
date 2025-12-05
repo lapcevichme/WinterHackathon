@@ -195,3 +195,4 @@ test.py
 backend/.env.deploy
 /backend_as_should_be
 /backend_original_bad
+# /backend/.well-known

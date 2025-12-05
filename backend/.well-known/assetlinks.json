@@ -1,12 +1,12 @@
 [
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.lapcevichme.winterhackathon",
-      "sha256_cert_fingerprints": [
-        "PASTE_RELEASE_SHA256_FINGERPRINT_HERE"
-      ]
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.lapcevichme.winterhackathon",
+        "sha256_cert_fingerprints": [
+          "58:7D:9B:4C:82:16:8C:1B:5A:98:4E:E6:7D:7E:55:6E:B7:05:60:0F:A9:C6:95:62:5B:8C:7D:E7:F5:9D:BA:BA"
+        ]
+      }
     }
-  }
-]
+  ]
