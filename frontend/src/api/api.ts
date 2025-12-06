@@ -1,4 +1,8 @@
-const API_PREFIX = '/api/v1'
+const API_PREFIX = `${
+  (import.meta.env.VITE_API_BASE_URL ??
+    (import.meta.env.DEV ? '' : 'https://winter-hack.fly.dev')
+  ).replace(/\/+$/, '') || ''
+}/api/v1`
 
 type ApiError = Error & { status?: number }
 
