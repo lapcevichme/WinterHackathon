@@ -1,6 +1,9 @@
 package com.lapcevichme.winterhackathon.presentation.profile
 
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,8 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,7 +40,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +56,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,8 +65,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
@@ -67,9 +78,6 @@ import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
 import com.lapcevichme.winterhackathon.domain.model.profile.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.toColorInt
-import coil3.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
@@ -77,6 +85,18 @@ fun ProfileScreen(
     onLogout: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val inputStream = context.contentResolver.openInputStream(it)
+            val bytes = inputStream?.readBytes()
+            bytes?.let { b -> viewModel.uploadAvatar(b) }
+            inputStream?.close()
+        }
+    }
 
     LaunchedEffect(uiState.isLoggedOut) {
         if (uiState.isLoggedOut) {
@@ -123,17 +143,64 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ProfileAvatar(avatarUrl = profile.avatarUrl)
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    ProfileAvatar(
+                        avatarUrl = profile.avatarUrl,
+                        onClick = { imagePickerLauncher.launch("image/*") }
+                    )
+
+                    if (uiState.isAvatarUploading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .padding(30.dp),
+                            color = Color.White,
+                            strokeWidth = 3.dp
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .border(2.dp, MaterialTheme.colorScheme.background, CircleShape)
+                            .clickable { imagePickerLauncher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = "Изменить фото",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = profile.displayName ?: "Имя не указано",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.clickable { viewModel.showEditDialog() }
+                ) {
+                    Text(
+                        text = profile.displayName ?: "Имя не указано",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = "Edit Name",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 Text(
                     text = profile.username ?: "",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -165,7 +232,9 @@ fun ProfileScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                         contentColor = MaterialTheme.colorScheme.error
                     ),
-                    modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(50))
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(50))
                 ) {
                     Text("ВЫЙТИ ИЗ АККАУНТА")
                 }
@@ -189,6 +258,7 @@ fun ProfileScreen(
             }
         }
 
+        // Диалоги
         if (uiState.selectedItem != null) {
             RedeemDialog(
                 prize = uiState.selectedItem!!,
@@ -197,19 +267,63 @@ fun ProfileScreen(
                 onDismiss = { viewModel.onDismissRedeemDialog() }
             )
         }
+
+        if (uiState.isEditDialogVisible && uiState.profile != null) {
+            EditProfileDialog(
+                currentName = uiState.profile!!.displayName ?: "",
+                onDismiss = { viewModel.hideEditDialog() },
+                onConfirm = { newName -> viewModel.updateDisplayName(newName) }
+            )
+        }
     }
 }
 
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Редактировать профиль") },
+        text = {
+            Column {
+                Text("Отображаемое имя")
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text) }) {
+                Text("Сохранить")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        }
+    )
+}
 
 @Composable
-fun ProfileAvatar(avatarUrl: String?) {
+fun ProfileAvatar(avatarUrl: String?, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .size(120.dp)
             .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
             .padding(4.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         if (avatarUrl != null) {

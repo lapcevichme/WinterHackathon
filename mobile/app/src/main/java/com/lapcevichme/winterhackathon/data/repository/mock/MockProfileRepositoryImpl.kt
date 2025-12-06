@@ -92,6 +92,10 @@ class MockProfileRepositoryImpl @Inject constructor() : ProfileRepository {
         return localProfile
     }
 
+    override suspend fun uploadAvatar(imageBytes: ByteArray): UserProfile {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getBalance(): Int {
         delay(300)
         return 1250

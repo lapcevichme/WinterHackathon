@@ -3,6 +3,7 @@ package com.lapcevichme.winterhackathon.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.winterhackathon.domain.model.profile.InventoryItem
+import com.lapcevichme.winterhackathon.domain.repository.ProfileRepository
 import com.lapcevichme.winterhackathon.domain.usecase.GenerateRedeemTokenUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.GetProfileUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.LogoutUseCase
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getProfileUseCase: GetProfileUseCase,
     private val generateRedeemTokenUseCase: GenerateRedeemTokenUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -107,5 +109,48 @@ class ProfileViewModel @Inject constructor(
 
     fun consumeLogoutEvent() {
         _uiState.update { it.copy(isLoggedOut = false) }
+    }
+
+    fun showEditDialog() {
+        _uiState.update { it.copy(isEditDialogVisible = true) }
+    }
+
+    fun hideEditDialog() {
+        _uiState.update { it.copy(isEditDialogVisible = false) }
+    }
+
+    fun updateDisplayName(newName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, isEditDialogVisible = false) }
+            try {
+                val updatedProfile = profileRepository.updateProfile(displayName = newName, avatarUrl = null)
+                _uiState.update {
+                    it.copy(isLoading = false, profile = updatedProfile)
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, error = "Ошибка обновления: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun uploadAvatar(imageBytes: ByteArray) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAvatarUploading = true) }
+            try {
+                val updatedProfile = profileRepository.uploadAvatar(imageBytes)
+                _uiState.update {
+                    it.copy(isAvatarUploading = false, profile = updatedProfile)
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isAvatarUploading = false,
+                        error = "Ошибка загрузки фото: ${e.message}"
+                    )
+                }
+            }
+        }
     }
 }

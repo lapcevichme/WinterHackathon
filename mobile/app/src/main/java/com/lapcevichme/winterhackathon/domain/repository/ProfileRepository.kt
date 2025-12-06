@@ -6,5 +6,6 @@ interface ProfileRepository {
     suspend fun getMyProfile(): UserProfile
     suspend fun generateRedeemToken(itemId: String): String
     suspend fun updateProfile(displayName: String?, avatarUrl: String?): UserProfile
+    suspend fun uploadAvatar(imageBytes: ByteArray): UserProfile
     suspend fun getBalance(): Int
 }

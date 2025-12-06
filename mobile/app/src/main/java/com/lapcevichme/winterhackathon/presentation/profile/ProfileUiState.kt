@@ -10,5 +10,7 @@ data class ProfileUiState(
     val isRedeemLoading: Boolean = false,
     val selectedItem: InventoryItem? = null,
     val redeemToken: String? = null,
-    val isLoggedOut: Boolean = false
+    val isLoggedOut: Boolean = false,
+    val isEditDialogVisible: Boolean = false,
+    val isAvatarUploading: Boolean = false
 )
