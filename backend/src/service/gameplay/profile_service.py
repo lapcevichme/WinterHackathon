@@ -4,7 +4,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from core.config import Settings
 from database.relational_db import (
     UoW,
     User,
@@ -13,13 +12,13 @@ from database.relational_db import (
     InventoryInterface,
     PrizesInterface,
     TokenQRInterface,
+    GamesInterface,
 )
 from domain.gameplay import (
     ProfileResponse,
     ProfilePatch,
     Balance,
     MainResponse,
-    GameConfig,
     GameStartResponse,
     GameScoreRequest,
     GameScoreResponse,
@@ -27,13 +26,10 @@ from domain.gameplay import (
     PrizeType,
     UserSummary,
     EnergyState,
-    ActiveGame,
     InventoryItem as InventoryItemSchema,
+    GameInfo,
 )
 from service.gameplay.utils import refill_energy
-
-settings = Settings()  # type: ignore
-
 
 class ProfileService:
     def __init__(
@@ -43,12 +39,14 @@ class ProfileService:
         inventory_repo: InventoryInterface,
         prizes_repo: PrizesInterface,
         token_repo: TokenQRInterface,
+        games_repo: GamesInterface,
     ):
         self.uow = uow
         self.teams_repo = teams_repo
         self.inventory_repo = inventory_repo
         self.prizes_repo = prizes_repo
         self.token_repo = token_repo
+        self.games_repo = games_repo
 
     async def _load_user(self, user_id: UUID) -> User:
         user = await self.uow.session.scalar(
@@ -62,6 +60,19 @@ class ProfileService:
         if user is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
         return user
+
+    async def _get_game(self, game_slug: str | None, allow_default: bool = True):
+        if game_slug:
+            game = await self.games_repo.get_by_slug(game_slug)
+            if game is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Unknown game")
+            return game
+        if not allow_default:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="game_id is required")
+        games = await self.games_repo.list()
+        if not games:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="No games configured")
+        return games[0]
 
     async def get_profile(self, user: User) -> ProfileResponse:
         db_user = await self._load_user(user.id)
@@ -107,6 +118,7 @@ class ProfileService:
 
     async def main(self, user: User) -> MainResponse:
         db_user = await self._load_user(user.id)
+        games = await self.games_repo.list()
         new_energy, next_refill = refill_energy(db_user.energy, db_user.updated_at)
         if new_energy != db_user.energy:
             db_user.energy = new_energy
@@ -124,33 +136,22 @@ class ProfileService:
                     next_refill_in_seconds=next_refill,
                 ),
             ),
-            active_game=ActiveGame(
-                name="Snowball Fight",
-                energy_cost=settings.GAME_ENERGY_COST,
-                is_available=db_user.energy >= settings.GAME_ENERGY_COST,
-            ),
-            quests=[],
+            games=[GameInfo(slug=g.slug, name=g.name, energy_cost=g.energy_cost) for g in games],
+            # quests=[],
         )
 
-    async def game_config(self, user: User) -> GameConfig:
-        return GameConfig(
-            game_url=settings.GAME_URL,
-            energy_cost=settings.GAME_ENERGY_COST,
-            user_energy=user.energy,
-            can_play=user.energy >= settings.GAME_ENERGY_COST,
-        )
-
-    async def apply_game_start(self, user: User) -> GameStartResponse:
+    async def apply_game_start(self, user: User, game_id: str | None = None) -> GameStartResponse:
         db_user = await self._load_user(user.id)
-        if db_user.energy < settings.GAME_ENERGY_COST:
+        game = await self._get_game(game_id)
+        if db_user.energy < game.energy_cost:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Not enough energy")
-        db_user.energy -= settings.GAME_ENERGY_COST
+        db_user.energy -= game.energy_cost
         await self.uow.commit()
         await self.uow.session.refresh(db_user)
         from database.relational_db import GameSessionInterface, GameSession  # local import to avoid cycle
 
         session_repo = GameSessionInterface(self.uow.session)
-        session_obj = GameSession(user_id=db_user.id, game_id="default", energy_cost=settings.GAME_ENERGY_COST)
+        session_obj = GameSession(user_id=db_user.id, game_id=game.slug, energy_cost=game.energy_cost)
         await session_repo.add(session_obj)
         await self.uow.commit()
         return GameStartResponse(session_id=session_obj.id, energy_left=db_user.energy)

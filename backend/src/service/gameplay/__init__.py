@@ -10,6 +10,7 @@ from database.relational_db import (
     TeamsInterface,
     LaunchCodeInterface,
     GameSessionInterface,
+    GamesInterface,
 )
 from .casino_service import CasinoService
 from .profile_service import ProfileService
@@ -30,7 +31,8 @@ async def get_profile_service(uow: Annotated[UoW, Depends(get_uow)]) -> ProfileS
     prizes_repo = PrizesInterface(uow.session)
     inventory_repo = InventoryInterface(uow.session)
     token_repo = TokenQRInterface(uow.session)
-    return ProfileService(uow, teams_repo, inventory_repo, prizes_repo, token_repo)
+    games_repo = GamesInterface(uow.session)
+    return ProfileService(uow, teams_repo, inventory_repo, prizes_repo, token_repo, games_repo)
 
 
 async def get_leaderboard_service(uow: Annotated[UoW, Depends(get_uow)]) -> LeaderboardService:

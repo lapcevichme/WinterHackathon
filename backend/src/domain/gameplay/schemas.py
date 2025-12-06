@@ -69,26 +69,6 @@ class UserSummary(BaseModel):
     energy: EnergyState
 
 
-class ActiveGame(BaseModel):
-    name: str
-    energy_cost: int
-    is_available: bool
-
-
-class QuestInfo(BaseModel):
-    id: UUID | str
-    title: str
-    progress: int
-    max_progress: int
-    reward: Balance
-    is_completed: bool
-    is_claimed: bool
-
-
-class MainResponse(BaseModel):
-    user_summary: UserSummary
-    active_game: ActiveGame
-    quests: list[QuestInfo] = Field(default_factory=list)
 
 
 class BetRequest(BaseModel):
@@ -107,16 +87,21 @@ class LeaderboardEntry(BaseModel):
     trend: Trend = Trend.SAME
 
 
-class GameConfig(BaseModel):
-    game_url: str
-    energy_cost: int
-    user_energy: int
-    can_play: bool
-
-
 class GameStartResponse(BaseModel):
     session_id: UUID
     energy_left: int
+
+
+class GameInfo(BaseModel):
+    slug: str
+    name: str
+    energy_cost: int
+    
+
+class MainResponse(BaseModel):
+    user_summary: UserSummary
+    games: list[GameInfo] = Field(default_factory=list)
+    # quests: list[QuestInfo] = Field(default_factory=list)
 
 
 class GameScoreRequest(BaseModel):

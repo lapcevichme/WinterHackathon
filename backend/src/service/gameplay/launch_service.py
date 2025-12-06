@@ -12,6 +12,7 @@ from database.relational_db import (
     GameSessionInterface,
     GameSession,
     User,
+    GamesInterface,
 )
 
 settings = Settings()  # pyright: ignore[reportCallIssue]
@@ -27,16 +28,21 @@ class LaunchService:
         self.uow = uow
         self.launch_repo = launch_repo
         self.session_repo = session_repo
+        self.games_repo = GamesInterface(uow.session)
 
     async def create_launch(self, user: User, game_id: str) -> tuple[str, UUID]:
         """
         Creates a game session and one-time launch code.
         Returns launch_code and session_id.
         """
+        game = await self.games_repo.get_by_slug(game_id)
+        if game is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown game")
+
         session = GameSession(
             user_id=user.id,
-            game_id=game_id,
-            energy_cost=settings.GAME_ENERGY_COST,
+            game_id=game.slug,
+            energy_cost=game.energy_cost,
         )
         await self.session_repo.add(session)
 

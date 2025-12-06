@@ -18,6 +18,15 @@ if TYPE_CHECKING:
     from .users.users_table import User
 
 
+class Game(TimestampMixin, Base):
+    __tablename__ = "games"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    slug: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    energy_cost: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
 class Team(TimestampMixin, Base):
     __tablename__ = "teams"
 
@@ -92,7 +101,7 @@ class GameSession(TimestampMixin, Base):
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    game_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    game_id: Mapped[str] = mapped_column(String(50), ForeignKey("games.slug"), nullable=False)
     energy_cost: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

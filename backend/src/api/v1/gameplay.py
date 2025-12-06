@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from core.security import auth_user, require
 from core.config import settings
-from database.relational_db import User
+from database.relational_db import User, get_uow, UoW, GamesInterface
 from service.gameplay import (
     get_casino_service,
     get_profile_service,
@@ -24,12 +24,12 @@ from domain.gameplay import (
     SpinResponse,
     LeaderboardType,
     LeaderboardEntry,
-    GameConfig,
     GameStartResponse,
     GameScoreRequest,
     GameScoreResponse,
     AdminRedeemRequest,
     AdminRedeemResponse,
+    GameInfo,
 )
 
 
@@ -43,8 +43,17 @@ def get_gameplay_router() -> APIRouter:
         launch_svc: Annotated[LaunchService, Depends(get_launch_service)],
     ):
         code, session_id = await launch_svc.create_launch(user, game_id)
-        launch_url = f"{settings.GAME_URL}?sid={session_id}#code={code}"
+        launch_url = f"{settings.GAME_URL}?game={game_id}&sid={session_id}#code={code}"
         return {"launch_url": launch_url, "session_id": session_id}
+
+    @router.get("/games", response_model=list[GameInfo])
+    async def list_games(uow: Annotated[UoW, Depends(get_uow)]):
+        repo = GamesInterface(uow.session)
+        games = await repo.list()
+        return [
+            GameInfo(slug=g.slug, name=g.name, energy_cost=g.energy_cost)
+            for g in games
+        ]
 
     # Profile
     @router.get("/profile/me", response_model=ProfileResponse)
@@ -103,19 +112,13 @@ def get_gameplay_router() -> APIRouter:
         return await svc.get(type)
 
     # Game
-    @router.get("/game/config", response_model=GameConfig)
-    async def game_config(
-        user: Annotated[User, Depends(auth_user)],
-        svc=Depends(get_profile_service),
-    ):
-        return await svc.game_config(user)
-
-    @router.post("/game/start", response_model=GameStartResponse)
+    @router.post("/game/{game_id}/start", response_model=GameStartResponse)
     async def game_start(
+        game_id: str,
         user: Annotated[User, Depends(auth_user)],
         svc=Depends(get_profile_service),
     ):
-        return await svc.apply_game_start(user)
+        return await svc.apply_game_start(user, game_id=game_id)
 
     @router.post("/game/score", response_model=GameScoreResponse)
     async def game_score(
