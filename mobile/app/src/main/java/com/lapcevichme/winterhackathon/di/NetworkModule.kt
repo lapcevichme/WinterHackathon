@@ -5,7 +5,7 @@ import com.lapcevichme.winterhackathon.core.network.AuthAuthenticator
 import com.lapcevichme.winterhackathon.core.network.AuthInterceptor
 import com.lapcevichme.winterhackathon.data.remote.AdminApiService
 import com.lapcevichme.winterhackathon.data.remote.CasinoApiService
-import com.lapcevichme.winterhackathon.data.remote.GameApi
+import com.lapcevichme.winterhackathon.data.remote.GameApiService
 import com.lapcevichme.winterhackathon.data.remote.LeaderboardApiService
 import com.lapcevichme.winterhackathon.data.remote.MainApiService
 import com.lapcevichme.winterhackathon.data.remote.ProfileApiService
@@ -71,8 +71,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGameApi(retrofit: Retrofit): GameApi {
-        return retrofit.create(GameApi::class.java)
+    fun provideGameApiService(retrofit: Retrofit): GameApiService {
+        return retrofit.create(GameApiService::class.java)
     }
 
     @Provides

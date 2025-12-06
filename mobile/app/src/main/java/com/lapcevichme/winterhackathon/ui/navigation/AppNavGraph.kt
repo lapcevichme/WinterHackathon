@@ -83,6 +83,6 @@ fun AppNavGraph(
                 }
             })
         }
-        composable(Screen.Game.route) { GameScreen(onCloseGame = { navController.popBackStack() }) }
+        composable(Screen.Game.route) { GameScreen(navController) }
     }
 }

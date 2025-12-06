@@ -9,7 +9,6 @@ import com.lapcevichme.winterhackathon.data.repository.impl.LeaderboardRepositor
 import com.lapcevichme.winterhackathon.data.repository.impl.MainRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.ProfileRepositoryImpl
 import com.lapcevichme.winterhackathon.data.repository.impl.UserRepositoryImpl
-import com.lapcevichme.winterhackathon.data.repository.mock.MockMainRepositoryImpl
 import com.lapcevichme.winterhackathon.domain.repository.AdminRepository
 import com.lapcevichme.winterhackathon.domain.repository.CasinoRepository
 import com.lapcevichme.winterhackathon.domain.repository.GameRepository

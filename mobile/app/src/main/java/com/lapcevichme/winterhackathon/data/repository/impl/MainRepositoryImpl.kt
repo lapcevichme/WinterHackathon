@@ -1,8 +1,9 @@
 package com.lapcevichme.winterhackathon.data.repository.impl
 
 import com.lapcevichme.winterhackathon.data.remote.MainApiService
-import com.lapcevichme.winterhackathon.domain.model.main.ActiveGame
-import com.lapcevichme.winterhackathon.domain.model.main.DailyQuest
+import com.lapcevichme.winterhackathon.domain.model.casino.Balance
+import com.lapcevichme.winterhackathon.domain.model.main.EnergyState
+import com.lapcevichme.winterhackathon.domain.model.main.GameInfo
 import com.lapcevichme.winterhackathon.domain.model.main.MainScreenData
 import com.lapcevichme.winterhackathon.domain.model.main.UserSummary
 import com.lapcevichme.winterhackathon.domain.repository.MainRepository
@@ -18,24 +19,22 @@ class MainRepositoryImpl @Inject constructor(
         return MainScreenData(
             userSummary = UserSummary(
                 id = response.userSummary.id,
-                displayName = response.userSummary.displayName ?: "Игрок",
-                department = "Отдел разработки",
-                winStreak = 0,
-                balance = response.userSummary.balance.amount
+                displayName = response.userSummary.displayName,
+                balance = Balance(
+                    amount = response.userSummary.balance.amount,
+                    currencySymbol = response.userSummary.balance.currencySymbol
+                ),
+                energy = EnergyState(
+                    current = response.userSummary.energy.current,
+                    max = response.userSummary.energy.max,
+                    nextRefillInSeconds = response.userSummary.energy.nextRefillInSeconds
+                )
             ),
-            activeGame = ActiveGame(
-                name = response.activeGame.name,
-                energyCost = response.activeGame.energyCost,
-                isAvailable = response.activeGame.isAvailable
-            ),
-            quests = response.quests.map { dto ->
-                DailyQuest(
-                    id = dto.id,
-                    title = dto.title,
-                    currentProgress = dto.progress,
-                    maxProgress = dto.maxProgress,
-                    reward = dto.reward.amount,
-                    isCompleted = dto.isCompleted
+            games = response.games?.map { game ->
+                GameInfo(
+                    slug = game.slug,
+                    name = game.name,
+                    energyCost = game.energyCost
                 )
             }
         )

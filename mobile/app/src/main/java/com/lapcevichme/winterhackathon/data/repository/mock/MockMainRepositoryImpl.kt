@@ -1,7 +1,8 @@
 package com.lapcevichme.winterhackathon.data.repository.mock
 
-import com.lapcevichme.winterhackathon.domain.model.main.ActiveGame
-import com.lapcevichme.winterhackathon.domain.model.main.DailyQuest
+import com.lapcevichme.winterhackathon.domain.model.casino.Balance
+import com.lapcevichme.winterhackathon.domain.model.main.EnergyState
+import com.lapcevichme.winterhackathon.domain.model.main.GameInfo
 import com.lapcevichme.winterhackathon.domain.model.main.MainScreenData
 import com.lapcevichme.winterhackathon.domain.model.main.UserSummary
 import com.lapcevichme.winterhackathon.domain.repository.MainRepository
@@ -16,19 +17,12 @@ class MockMainRepositoryImpl @Inject constructor() : MainRepository {
             userSummary = UserSummary(
                 id = "1",
                 displayName = "Егор Винник",
-                department = "IT Отдел",
-                winStreak = 3,
-                balance = 1250
+                balance = Balance(1250, "❄️"),
+                energy = EnergyState(3, 5, 3600)
             ),
-            activeGame = ActiveGame(
-                "Flappy Bird",
-                energyCost = 1,
-                isAvailable = true
-            ),
-            quests = listOf(
-                DailyQuest("1", "Сыграть 3 матча", 1, 3, 50),
-                DailyQuest("2", "Победить HR отдел", 0, 1, 100),
-                DailyQuest("3", "Заработать 500 очков", 500, 500, 25, isCompleted = true)
+            games = listOf(
+                GameInfo("flappy-bird", "Flappy Bird", 1),
+                GameInfo("snake", "Snake", 1)
             )
         )
     }

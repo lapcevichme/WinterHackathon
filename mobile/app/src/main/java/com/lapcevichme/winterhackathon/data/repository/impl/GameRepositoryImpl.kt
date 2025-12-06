@@ -1,23 +1,24 @@
 package com.lapcevichme.winterhackathon.data.repository.impl
 
-import com.lapcevichme.winterhackathon.data.remote.GameApi
-import com.lapcevichme.winterhackathon.data.remote.GameResultRequestDto
+import com.lapcevichme.winterhackathon.data.remote.GameApiService
+import com.lapcevichme.winterhackathon.data.remote.GameScoreRequest
 import com.lapcevichme.winterhackathon.domain.repository.GameRepository
 import javax.inject.Inject
 
 class GameRepositoryImpl @Inject constructor(
-    private val api: GameApi
+    private val api: GameApiService
 ) : GameRepository {
 
-    override suspend fun sendScore(score: Int) {
-        val session = api.startGame()
+    override suspend fun startGame(gameId: String): String {
+        val response = api.startGame(gameId)
+        return response.sessionId
+    }
 
-        val request = GameResultRequestDto(
-            sessionId = session.sessionId,
-            score = score,
-            winnerId = 1
+    override suspend fun sendScore(sessionId: String, score: Int) {
+        val request = GameScoreRequest(
+            sessionId = sessionId,
+            score = score
         )
-
-        api.sendGameResult(request)
+        api.sendScore(request)
     }
 }

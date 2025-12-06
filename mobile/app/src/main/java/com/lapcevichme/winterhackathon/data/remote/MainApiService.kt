@@ -12,8 +12,7 @@ interface MainApiService {
 @Serializable
 data class MainResponseDto(
     @SerialName("user_summary") val userSummary: UserSummaryDto,
-    @SerialName("active_game") val activeGame: ActiveGameDto,
-    @SerialName("quests") val quests: List<QuestDto>
+    @SerialName("games") val games: List<GameInfoDto>? = null
 )
 
 @Serializable
@@ -32,19 +31,8 @@ data class EnergyStateDto(
 )
 
 @Serializable
-data class ActiveGameDto(
+data class GameInfoDto(
+    @SerialName("slug") val slug: String,
     @SerialName("name") val name: String,
-    @SerialName("energy_cost") val energyCost: Int,
-    @SerialName("is_available") val isAvailable: Boolean
-)
-
-@Serializable
-data class QuestDto(
-    @SerialName("id") val id: String,
-    @SerialName("title") val title: String,
-    @SerialName("progress") val progress: Int,
-    @SerialName("max_progress") val maxProgress: Int,
-    @SerialName("reward") val reward: BalanceDto,
-    @SerialName("is_completed") val isCompleted: Boolean,
-    @SerialName("is_claimed") val isClaimed: Boolean
+    @SerialName("energy_cost") val energyCost: Int
 )

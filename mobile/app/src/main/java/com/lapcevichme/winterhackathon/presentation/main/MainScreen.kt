@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,9 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -30,6 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.lapcevichme.winterhackathon.domain.model.main.GameInfo
 
 @Composable
 fun MainScreen(
@@ -61,6 +70,8 @@ fun MainScreen(
         ),
         label = "scale"
     )
+
+    var selectedGameSlug by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -90,15 +101,10 @@ fun MainScreen(
             ) {
                 Column {
                     Text(
-                        "Привет, ${data.userSummary.displayName}!",
+                        "Привет, ${data.userSummary.displayName ?: "Игрок"}!",
                         color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        data.userSummary.department,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
@@ -112,20 +118,26 @@ fun MainScreen(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = "Баланс",
-                    value = "${data.userSummary.balance}",
+                    value = "${data.userSummary.balance.amount} ${data.userSummary.balance.currencySymbol}",
                     icon = Icons.Default.Star,
                     color = Color(0xFFFFD700)
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Win Streak",
-                    value = "${data.userSummary.winStreak}",
-                    icon = Icons.Default.Star,
+                    title = "Энергия",
+                    value = "${data.userSummary.energy.current}/${data.userSummary.energy.max}",
+                    icon = Icons.Default.FlashOn,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
             Spacer(modifier = Modifier.weight(1f))
+
+            val playButtonColor = if (selectedGameSlug != null) listOf(
+                Color(0xFF28a745),
+                Color(0xFF218838)
+            ) else listOf(Color(0xFF6c757d), Color(0xFF5a6268))
+
 
             Box(
                 contentAlignment = Alignment.Center,
@@ -135,14 +147,13 @@ fun MainScreen(
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFFFF5252),
-                                Color(0xFFB71C1C)
-                            )
+                            colors = playButtonColor
                         )
                     )
-                    .clickable {
-                        navController.navigate("game")
+                    .clickable(enabled = selectedGameSlug != null) {
+                        selectedGameSlug?.let {
+                            navController.navigate("game/${it}")
+                        }
                     }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -163,20 +174,25 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "ТЕКУЩАЯ ИГРА",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                    letterSpacing = 2.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = data.activeGame.name,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Medium
-                )
+            if (!data.games.isNullOrEmpty()) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "ВЫБЕРИ ИГРУ",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        items(data.games) { game ->
+                            GameCard(
+                                game = game,
+                                isSelected = selectedGameSlug == game.slug,
+                                onSelected = { selectedGameSlug = game.slug }
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1.5f))
@@ -184,6 +200,44 @@ fun MainScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "Ошибка: ${uiState.error}", color = MaterialTheme.colorScheme.error)
             }
+        }
+    }
+}
+
+@Composable
+fun GameCard(
+    game: GameInfo,
+    isSelected: Boolean,
+    onSelected: () -> Unit
+) {
+    val borderColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    Card(
+        modifier = Modifier
+            .width(150.dp)
+            .border(2.dp, borderColor, RoundedCornerShape(16.dp))
+            .clickable { onSelected() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = game.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Энергия: ${game.energyCost}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
         }
     }
 }

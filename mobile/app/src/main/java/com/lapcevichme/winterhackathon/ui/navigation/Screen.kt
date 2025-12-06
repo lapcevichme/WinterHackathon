@@ -19,6 +19,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     data object AdminScanner : Screen("admin_scanner", "Scan", Icons.Default.QrCodeScanner)
     object Casino : Screen("casino", "Казино", Icons.Filled.ShoppingCart)
     object Profile : Screen("profile", "Штаб", Icons.Filled.Person)
-    object Game : Screen("game", "Игра", Icons.Filled.Gamepad)
+    object Game : Screen("game/{gameId}", "Игра", Icons.Filled.Gamepad)
     object JoinTeam : Screen("join_team/{teamId}", "Вступить в команду", Icons.Default.Person)
 }

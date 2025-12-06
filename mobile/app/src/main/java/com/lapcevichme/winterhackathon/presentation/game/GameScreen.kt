@@ -9,31 +9,45 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import kotlinx.coroutines.flow.collectLatest
 
 @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
 @Composable
 fun GameScreen(
-    onCloseGame: () -> Unit
+    navController: NavController,
+    viewModel: GameViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is GameEvent.ShowScoreToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is GameEvent.CloseGame -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
 
     val webInterface = remember {
         object {
             @JavascriptInterface
             fun sendScore(score: Int) {
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "Очки получены: $score", Toast.LENGTH_SHORT).show()
-                }
+                viewModel.onScoreReceived(score)
             }
 
             @JavascriptInterface
             fun closeGame() {
-                Handler(Looper.getMainLooper()).post {
-                    onCloseGame()
-                }
+                viewModel.onCloseRequested()
             }
         }
     }
@@ -50,6 +64,8 @@ fun GameScreen(
                     javaScriptEnabled = true
                     domStorageEnabled = true
                     allowFileAccess = true
+                    // For local development
+                    WebView.setWebContentsDebuggingEnabled(true)
                 }
 
                 webViewClient = WebViewClient()

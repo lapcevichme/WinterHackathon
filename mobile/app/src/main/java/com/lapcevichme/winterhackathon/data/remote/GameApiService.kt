@@ -3,28 +3,32 @@ package com.lapcevichme.winterhackathon.data.remote
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
-import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
-interface GameApi {
-    @GET("game/start")
-    suspend fun startGame(): GameStartResponseDto
+interface GameApiService {
+    @POST("game/{game_id}/start")
+    suspend fun startGame(@Path("game_id") gameId: String): GameStartResponse
 
-    @POST("game/result")
-    suspend fun sendGameResult(@Body body: GameResultRequestDto)
+    @POST("3game/score")
+    suspend fun sendScore(@Body body: GameScoreRequest): GameScoreResponse
 }
 
-
 @Serializable
-data class GameStartResponseDto(
-    @SerialName("session") val sessionId: String,
-    @SerialName("user_1") val user1Id: String,
-    @SerialName("user_2") val user2Id: String
+data class GameStartResponse(
+    @SerialName("session_id") val sessionId: String,
+    @SerialName("energy_left") val energyLeft: Int
 )
 
 @Serializable
-data class GameResultRequestDto(
+data class GameScoreRequest(
     @SerialName("session_id") val sessionId: String,
-    @SerialName("score") val score: Int,
-    @SerialName("winner_id") val winnerId: Int
+    @SerialName("score") val score: Int
+)
+
+@Serializable
+data class GameScoreResponse(
+    @SerialName("success") val success: Boolean,
+    @SerialName("team_score_added") val teamScoreAdded: Int,
+    @SerialName("total_team_score") val totalTeamScore: Int? = null
 )
