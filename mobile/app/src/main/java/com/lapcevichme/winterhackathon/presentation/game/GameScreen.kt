@@ -10,10 +10,12 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.collectLatest
 
@@ -24,6 +26,7 @@ fun GameScreen(
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -71,11 +74,12 @@ fun GameScreen(
                 webViewClient = WebViewClient()
 
                 addJavascriptInterface(webInterface, "AndroidGame")
-
-                loadUrl("https://lapcevichme.github.io/WinterHackathon/")
             }
         },
         update = { webView ->
+            uiState.url?.let { url ->
+                webView.loadUrl(url)
+            }
         }
     )
 }

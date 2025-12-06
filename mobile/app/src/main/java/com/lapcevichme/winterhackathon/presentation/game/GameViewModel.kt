@@ -3,11 +3,15 @@ package com.lapcevichme.winterhackathon.presentation.game
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lapcevichme.winterhackathon.domain.usecase.LaunchGameUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.SendScoreUseCase
 import com.lapcevichme.winterhackathon.domain.usecase.StartGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,12 +20,21 @@ sealed class GameEvent {
     data object CloseGame : GameEvent()
 }
 
+data class GameUiState(
+    val url: String? = null,
+    val error: String? = null
+)
+
 @HiltViewModel
 class GameViewModel @Inject constructor(
     private val startGameUseCase: StartGameUseCase,
+    private val launchGameUseCase: LaunchGameUseCase,
     private val sendScoreUseCase: SendScoreUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(GameUiState())
+    val uiState = _uiState.asStateFlow()
 
     private val _events = Channel<GameEvent>()
     val events = _events.receiveAsFlow()
@@ -30,14 +43,16 @@ class GameViewModel @Inject constructor(
 
     init {
         val gameId: String = savedStateHandle.get<String>("gameId")!!
-        onGameStarted(gameId)
-    }
-
-    private fun onGameStarted(gameId: String) {
         viewModelScope.launch {
             try {
+                // First, launch the game to get the URL with the code
+                val launchUrl = launchGameUseCase(gameId)
+                _uiState.update { it.copy(url = launchUrl) }
+
+                // Then, start the game session to get the session ID
                 sessionId = startGameUseCase(gameId)
             } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
                 _events.send(GameEvent.ShowScoreToast("Ошибка начала игры: ${e.message}"))
                 _events.send(GameEvent.CloseGame)
             }

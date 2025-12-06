@@ -10,6 +10,10 @@ class MockGameRepositoryImpl @Inject constructor() : GameRepository {
         return "mock-session-id"
     }
 
+    override suspend fun launchGame(gameId: String): String {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun sendScore(sessionId: String, score: Int) {
         // Do nothing
     }

@@ -10,9 +10,17 @@ interface GameApiService {
     @POST("game/{game_id}/start")
     suspend fun startGame(@Path("game_id") gameId: String): GameStartResponse
 
-    @POST("3game/score")
+    @POST("games/{game_id}/launch")
+    suspend fun launchGame(@Path("game_id") gameId: String): GameLaunchResponse
+
+    @POST("game/score")
     suspend fun sendScore(@Body body: GameScoreRequest): GameScoreResponse
 }
+
+@Serializable
+data class GameLaunchResponse(
+    @SerialName("launch_url") val launchUrl: String
+)
 
 @Serializable
 data class GameStartResponse(

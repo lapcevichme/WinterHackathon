@@ -14,6 +14,11 @@ class GameRepositoryImpl @Inject constructor(
         return response.sessionId
     }
 
+    override suspend fun launchGame(gameId: String): String {
+        val response = api.launchGame(gameId)
+        return response.launchUrl
+    }
+
     override suspend fun sendScore(sessionId: String, score: Int) {
         val request = GameScoreRequest(
             sessionId = sessionId,
