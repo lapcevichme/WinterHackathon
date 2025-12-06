@@ -59,6 +59,8 @@ class CredentialsService:
             password_hash=password_hash,
             # allow_password_login=True,
             username=payload.username,
+            energy=config.INITIAL_ENERGY,
+            amount=config.INITIAL_BALANCE,
         )
         
         try:

@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     # Gameplay
     GAME_URL: str = "https://lapcevichme.github.io/WinterHackathon/"
     GAME_ENERGY_COST: int = 1
+    INITIAL_ENERGY: int = 10
+    INITIAL_BALANCE: int = 500
 
 settings = Settings()
 

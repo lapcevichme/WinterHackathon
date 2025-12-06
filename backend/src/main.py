@@ -53,6 +53,7 @@ async def ping():
 allowed_origins = [
     "http://localhost:5173",
     "https://localhost:5173",
+    "https://lapcevichme.github.io",
 ]
 
 if config.SITE_URL:
