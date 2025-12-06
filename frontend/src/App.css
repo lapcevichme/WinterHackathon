@@ -112,3 +112,119 @@
     font-size: 0.95rem;
   }
 }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.18), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(14, 165, 233, 0.22), transparent 28%),
+    rgba(7, 16, 30, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 6;
+}
+
+.overlay-card {
+  width: min(560px, 96vw);
+  background: rgba(10, 26, 45, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+  padding: 26px 26px 22px;
+  text-align: center;
+}
+
+.overlay-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.overlay-title {
+  margin: 10px 0 6px;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: #e2e8f0;
+}
+
+.overlay-subtitle {
+  margin: 6px 0 12px;
+  color: #cbd5e1;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.btn {
+  min-width: 140px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  color: #0b1626;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #22d3ee, #2563eb);
+  color: #0b1626;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 15px 36px rgba(0, 0, 0, 0.35);
+}
+
+.overlay-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecdd3;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.stat-pill {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-weight: 700;
+}
