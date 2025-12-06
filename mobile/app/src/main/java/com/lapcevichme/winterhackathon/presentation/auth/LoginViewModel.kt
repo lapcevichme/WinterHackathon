@@ -28,8 +28,7 @@ class LoginViewModel @Inject constructor(
         username: String,
         password: String,
         email: String,
-        displayName: String,
-        departmentId: String?
+        displayName: String
     ) {
         val isLogin = _uiState.value.isLoginMode
 

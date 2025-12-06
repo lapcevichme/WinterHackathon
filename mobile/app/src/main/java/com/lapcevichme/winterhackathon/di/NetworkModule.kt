@@ -104,4 +104,10 @@ object NetworkModule {
     fun provideMainApiService(retrofit: Retrofit): MainApiService {
         return retrofit.create(MainApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideTeamApiService(retrofit: Retrofit): com.lapcevichme.winterhackathon.data.remote.TeamApiService {
+        return retrofit.create(com.lapcevichme.winterhackathon.data.remote.TeamApiService::class.java)
+    }
 }

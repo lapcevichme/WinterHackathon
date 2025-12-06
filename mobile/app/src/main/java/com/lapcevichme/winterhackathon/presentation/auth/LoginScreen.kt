@@ -9,19 +9,15 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,20 +27,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
-data class Department(val id: String, val name: String, val emoji: String)
-
-val departments = listOf(
-    Department("it", "IT Отдел", "💻"),
-    Department("hr", "HR & People", "🤝"),
-    Department("sales", "Продажи", "💰"),
-    Department("accounting", "Бухгалтерия", "📊"),
-    Department("marketing", "Маркетинг", "📢")
-)
-
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit, // Callback вместо NavController
-    preselectedTeamId: String? = null,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -58,7 +43,6 @@ fun LoginScreen(
     var realName by remember { mutableStateOf("") }
 
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var selectedTeamId by remember(preselectedTeamId) { mutableStateOf(preselectedTeamId) }
 
     // Реагируем на успех, вызывая внешний колбэк
     LaunchedEffect(uiState.isSuccess) {
@@ -71,12 +55,6 @@ fun LoginScreen(
         uiState.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.errorShown()
-        }
-    }
-
-    LaunchedEffect(preselectedTeamId) {
-        if (preselectedTeamId != null) {
-            selectedTeamId = preselectedTeamId
         }
     }
 
@@ -185,32 +163,7 @@ fun LoginScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (!uiState.isLoginMode) {
-            Text(
-                "Выбери свой клан:",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(departments) { dept ->
-                    DepartmentItem(
-                        department = dept,
-                        isSelected = selectedTeamId == dept.id,
-                        onClick = { selectedTeamId = dept.id }
-                    )
-                }
-            }
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-        }
+        Spacer(modifier = Modifier.weight(1f))
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -229,8 +182,7 @@ fun LoginScreen(
                     username = username,
                     password = password,
                     email = email,
-                    displayName = realName,
-                    departmentId = selectedTeamId
+                    displayName = realName
                 )
             },
             enabled = !uiState.isLoading &&
@@ -252,48 +204,11 @@ fun LoginScreen(
                 )
             } else {
                 Text(
-                    if (uiState.isLoginMode) "ВОЙТИ" else "ВСТУПИТЬ В БОЙ",
+                    if (uiState.isLoginMode) "ВОЙТИ" else "СОЗДАТЬ",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun DepartmentItem(
-    department: Department,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val bgColor =
-        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(bgColor)
-            .clickable { onClick() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(department.emoji, style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            department.name,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Selected",
-                tint = MaterialTheme.colorScheme.primary
-            )
         }
     }
 }

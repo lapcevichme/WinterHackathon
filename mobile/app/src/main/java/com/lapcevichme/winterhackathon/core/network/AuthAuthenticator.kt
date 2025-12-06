@@ -1,5 +1,7 @@
 package com.lapcevichme.winterhackathon.core.network
 
+import com.lapcevichme.winterhackathon.core.bus.AuthEvent
+import com.lapcevichme.winterhackathon.core.bus.AuthEventBus
 import com.lapcevichme.winterhackathon.core.manager.TokenManager
 import com.lapcevichme.winterhackathon.data.remote.AuthApiService
 import kotlinx.coroutines.runBlocking
@@ -12,7 +14,8 @@ import javax.inject.Provider
 
 class AuthAuthenticator @Inject constructor(
     private val tokenManager: TokenManager,
-    private val apiService: Provider<AuthApiService>
+    private val apiService: Provider<AuthApiService>,
+    private val authEventBus: AuthEventBus
 ) : Authenticator {
 
     override fun authenticate(route: Route?, response: Response): Request? {
@@ -33,6 +36,9 @@ class AuthAuthenticator @Inject constructor(
                     .build()
             } catch (e: Exception) {
                 tokenManager.clearTokens()
+                runBlocking {
+                    authEventBus.postEvent(AuthEvent.LOGOUT)
+                }
                 null
             }
         }

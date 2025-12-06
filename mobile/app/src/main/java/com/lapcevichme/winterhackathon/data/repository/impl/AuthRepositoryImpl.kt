@@ -1,18 +1,22 @@
 package com.lapcevichme.winterhackathon.data.repository.impl
 
+import com.lapcevichme.winterhackathon.core.bus.AuthEvent
+import com.lapcevichme.winterhackathon.core.bus.AuthEventBus
 import com.lapcevichme.winterhackathon.core.manager.TokenManager
 import com.lapcevichme.winterhackathon.data.remote.AuthApiService
 import com.lapcevichme.winterhackathon.data.remote.LoginRequest
 import com.lapcevichme.winterhackathon.data.remote.RegisterRequest
 import com.lapcevichme.winterhackathon.data.remote.ValidationErrorResponse
 import com.lapcevichme.winterhackathon.domain.repository.AuthRepository
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val api: AuthApiService,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val authEventBus: AuthEventBus
 ) : AuthRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -44,6 +48,9 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             try { api.logout() } catch (e: Exception) { e.printStackTrace() }
             tokenManager.clearTokens()
+            runBlocking {
+                authEventBus.postEvent(AuthEvent.LOGOUT)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

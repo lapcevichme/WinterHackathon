@@ -31,6 +31,14 @@ fun WinterHackathonApp(
 
         val showBottomBar = currentRoute !in bottomBarHiddenRoutes
 
+        LaunchedEffect(viewModel.isUserLoggedIn) {
+            if (!viewModel.isUserLoggedIn && currentRoute !in bottomBarHiddenRoutes) {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+
         LaunchedEffect(currentRoute) {
             if (currentRoute == Screen.Home.route) {
                 viewModel.updateAuthState()

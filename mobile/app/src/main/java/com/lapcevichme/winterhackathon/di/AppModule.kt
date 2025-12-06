@@ -68,4 +68,10 @@ object AppModule {
     fun provideUserRepository(impl: UserRepositoryImpl): UserRepository {
         return impl
     }
+
+    @Provides
+    @Singleton
+    fun provideTeamRepository(impl: com.lapcevichme.winterhackathon.data.repository.impl.TeamRepositoryImpl): com.lapcevichme.winterhackathon.domain.repository.TeamRepository {
+        return impl
+    }
 }
