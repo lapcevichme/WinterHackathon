@@ -38,7 +38,6 @@ class LoginViewModel @Inject constructor(
         }
 
         if (!isLogin) {
-            // Для регистрации нужен еще username (как минимум)
             if (username.isBlank()) {
                 _uiState.update { it.copy(error = "Укажите Username") }
                 return
@@ -55,7 +54,6 @@ class LoginViewModel @Inject constructor(
                     email = email,
                     password = password,
                     username = username
-                    // displayName и departmentId
                 )
                 authRepository.register(request)
             }
