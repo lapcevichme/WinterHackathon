@@ -22,20 +22,40 @@ class CasinoViewModel @Inject constructor(
         private set
 
     init {
-        loadInitialData()
+        loadInitialData(isInitial = true)
     }
 
-    private fun loadInitialData() {
+    fun refresh() {
+        loadInitialData(isInitial = false)
+    }
+
+    private fun loadInitialData(isInitial: Boolean) {
         viewModelScope.launch {
-            try {
-                val userBalance = repository.getUserBalance()
-                uiState = uiState.copy(
-                    balance = userBalance.amount,
-                    currencySymbol = userBalance.currencySymbol
-                )
-            } catch (e: Exception) {
-                uiState = uiState.copy(error = "Не удалось обновить баланс: ${e.message}")
+            uiState = if (isInitial) {
+                uiState.copy(isLoading = true, error = null, lastWin = null)
+            } else {
+                uiState.copy(isRefreshing = true, error = null, lastWin = null)
             }
+
+            val result = runCatching { repository.getUserBalance() }
+
+            uiState = result.fold(
+                onSuccess = { userBalance ->
+                    uiState.copy(
+                        balance = userBalance.amount,
+                        currencySymbol = userBalance.currencySymbol,
+                        isLoading = false,
+                        isRefreshing = false
+                    )
+                },
+                onFailure = { e ->
+                    uiState.copy(
+                        error = "Не удалось обновить баланс: ${e.message}",
+                        isLoading = false,
+                        isRefreshing = false
+                    )
+                }
+            )
         }
     }
 

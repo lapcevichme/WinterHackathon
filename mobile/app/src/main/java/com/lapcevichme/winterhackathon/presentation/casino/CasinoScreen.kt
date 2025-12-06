@@ -32,6 +32,10 @@ import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+// ... other imports ...
+
 @Composable
 fun CasinoScreenRoot(
     viewModel: CasinoViewModel = hiltViewModel()
@@ -41,7 +45,8 @@ fun CasinoScreenRoot(
         onSpinClick = {
             viewModel.onSpinClicked()
         },
-        onAnimationEnd = { viewModel.onAnimationFinished() }
+        onAnimationEnd = { viewModel.onAnimationFinished() },
+        onRefresh = { viewModel.refresh() }
     )
 }
 
@@ -49,7 +54,8 @@ fun CasinoScreenRoot(
 fun CasinoScreen(
     state: CasinoUiState,
     onSpinClick: () -> Unit,
-    onAnimationEnd: () -> Unit
+    onAnimationEnd: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -131,16 +137,28 @@ fun CasinoScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Header
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(8.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Баланс: ${state.balance} ${state.currencySymbol}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                // Spacer to balance the refresh button
+                Spacer(modifier = Modifier.width(48.dp))
+
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(8.dp)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Баланс: ${state.balance} ${state.currencySymbol}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                IconButton(onClick = onRefresh) {
+                    Icon(Icons.Filled.Refresh, contentDescription = "Обновить", tint = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -250,11 +268,17 @@ fun CasinoScreen(
                     }
 
                     state.error != null -> {
-                        Text(
-                            "Ошибка: ${state.error}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "Ошибка: ${state.error}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = onRefresh) {
+                                Text("Попробовать снова")
+                            }
+                        }
                     }
                 }
             }
