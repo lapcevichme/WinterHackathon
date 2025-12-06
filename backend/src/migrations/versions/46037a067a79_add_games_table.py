@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from uuid import uuid4
 
 
@@ -49,6 +50,18 @@ def upgrade() -> None:
     op.bulk_insert(
         games_table,
         [{"id": uuid4(), **row} for row in defaults],
+    )
+
+    # Align existing sessions to a valid slug before adding FK
+    op.execute(
+        text(
+            """
+            UPDATE game_sessions
+            SET game_id = 'flappy'
+            WHERE game_id IS NULL
+               OR game_id NOT IN (SELECT slug FROM games)
+            """
+        )
     )
 
     op.alter_column(
